@@ -37,6 +37,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    #SIEHC
+    'usuarios',
+    'citas',
+    'medicamentos',
+    'facturacion',
+    'historial',
+    'hospitales',
+    'soporte',
+    'atencion',
 ]
 
 MIDDLEWARE = [

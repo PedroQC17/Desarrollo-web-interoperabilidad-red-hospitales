@@ -1,0 +1,88 @@
+:root { /*configuracion de variables globales*/
+    --primary-color: #178c75;
+    --text-dark: #333;
+    --bg-light: #f9f9f9;
+    --white: #ffffff;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
+
+header {
+    display: flex;
+    background-color: var(--white);
+    border-bottom: 3px solid var(--primary-color);
+    padding: 10px 50px;
+    justify-content: space-between;   
+    align-items: center;   
+}
+
+.principal-logo img {
+    width: 50px;   /* ajusta según quieras */
+    height: auto;
+}
+
+.left-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navigation {
+    display: flex;
+    gap: 20px;
+}
+
+.auth {
+    display: flex;
+    gap: 15px;
+}
+
+.app-title {
+    font-weight: 600;
+    font-size: 18px;
+    color: #1f2937;
+}
+
+.navigation a {
+    text-decoration: none;
+    color: #6b7280; /* gris suave */
+    font-size: 14px;
+    transition: 0.3s;
+}
+
+.navigation a:hover {
+    color: var(--primary-color);
+}
+
+.login {
+    color: #374151;
+    text-decoration: none;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.register {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.register:hover {
+    opacity: 0.9;
+}
+
+.login:hover {
+    color: var(--primary-color);
+}
