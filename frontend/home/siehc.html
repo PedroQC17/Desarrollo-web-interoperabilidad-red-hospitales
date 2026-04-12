@@ -6,11 +6,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIEHC</title>
-    <link ref="stylesheet" href="../home/siehc.css"></link>
+    <link rel="stylesheet" href="../home/siehc.css">
 
 </head>
-
-
 
 <body>
     <!--cabecera del homepage-->
@@ -39,55 +37,66 @@
     <main>
         <!--Contenedor de inicio-->
         <section class="inicio-section-home">
-
-            <div class="label-home">
-                <div class="icon-section-home">
+            
+            <div>
+                <div class="label-home">
+                    
                     <img src="../src/assets/shield.png" alt="shield">
-                </div>
-                <div class="label-text-home">Red Hospitalaria Integrada</div>
-            </div>
 
-            <div class="title-home">
-                <h1>Tu salud, <strong>conectada</strong> en toda la red</h1>
-            </div>
-
-            <div class="description-home">
-                <p>SIEHC integra hospitales, médicos y pacientes en un solo sistema. Gestiona citas, expedientes clínicos y recetas médicas de forma segura y eficiente.</p>
-            </div>
-
-            <div class="start-now">
-                    <a href="#sign-in">Comenzar ahora</a>
-            </div>
-            <div class="know-more">
-                    <a href="#Funcionalidades">Conocer más</a>
-            </div>
-
-            <div class="achievements-home">
-
-                <div>
-                    <img src="../src/assets/business-people.png" alt="business-people">
-                    <h3>+10,000</h3>
-                    <p>Pacientes activos</p>
+                    <p>Red Hospitalaria Integrada</p>
+                    
                 </div>
 
-                <div>
-                    <img src="../src/assets/reloj-de-mano.png" alt="reloj-de-mano">
-                    <h3>+50,000</h3>
-                    <p>Citas gestionadas</p>
+                <div class="title-home">
+                    <h1>Tu salud, <strong>conectada</strong> en </h1>
+                    <h1>toda la red</h1>
                 </div>
 
-                <div>
-                    <img src="../src/assets/informacion-personal.png" alt="informacion-personal">
-                    <h3>100%</h3>
-                    <p>Datos protegidos</p>
+                <div class="description-home">
+                    <p>SIEHC integra hospitales, médicos y pacientes en un solo<br>
+                        sistema. Gestiona citas, expedientes clínicos y recetas<br>
+                        médicas de forma segura y eficiente.
+                    </p>
+                </div>
+
+                <div class="options-home">
+                    <a href="#sign-in" class="start-now">Comenzar ahora</a>
+                    <a href="#Funcionalidades" class="know-more">Conocer más</a>
+                </div>
+
+                <div class="achievements-home">
+
+                    <div class ="achievement">
+                        <img src="../src/assets/business-people.png" alt="business-people">
+                        <h3>+10,000</h3>
+                        <p>Pacientes activos</p>
+                    </div>
+
+                    <div class="achievement">
+                        <img src="../src/assets/reloj-de-mano.png" alt="reloj-de-mano">
+                        <h3>+50,000</h3>
+                        <p>Citas gestionadas</p>
+                    </div>
+
+                    <div class="achievement">
+                        <img src="../src/assets/informacion-personal.png" alt="informacion-personal">
+                        <h3>100%</h3>
+                        <p>Datos protegidos</p>
+                    </div>
+                
                 </div>
 
             </div>
+
+            <div class="image-section-home">
+                <img src="../src/assets/logo-siehc.png" alt="SIEHC Logo">
+            </div>
+            
         </section>
 
         <section class="funcionalities-section-home">
             <div class="titles-home">
-                <h4>Funcionaliades</h4>
+                <h4>Funcionalidades</h4>
             </div>
 
             <div class="info-home">
@@ -147,10 +156,10 @@
                 <p>Cada usuario tiene funcionalidades diseñadas específicamente para su rol dentro de la red.</p>
             </div>
 
-            <div class="cards">
+            <div class="cards2">
 
-                <div class="card">
-                    <img src="../src/assets/icons8-enfermedad-48.png" alt="Paciente">
+                <div class="card2">
+                    <img src="../src/assets/userpaciente.png" alt="Paciente">
                     <h2>Paciente</h2>
                     <p>Registra tu historial médico, agenda citas en la red hospitalaria, consulta diagnósticos y recetas.</p>
 
@@ -166,8 +175,8 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <img src="../src/assets/icons8-doctor-dando-consejos-50.png" alt="Medico">
+                <div class="card2">
+                    <img src="../src/assets/doctor..png" alt="Medico">
                     <h2>Medico</h2>
                     <p>Atiende citas, consulta historiales de pacientes, emite diagnósticos y genera recetas médicas.</p>
 
@@ -183,8 +192,8 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <img src="../src/assets/icons8-administrador-del-hombre-50.png" alt="Administrador">
+                <div class="card2">
+                    <img src="../src/assets/useradmin.png" alt="Administrador">
                     <h2>Administrador</h2>
                     <p>Gestiona hospitales, usuarios y la configuración general de la red de servicios de salud.</p>
 
@@ -206,11 +215,11 @@
 
     </main>
 
-    <footer>
+    <footer class="footer">
         <div class="footer-home">
             <div class="footer-info">
                 <h3>SIEHC</h3>
-                <P>Sistema de Integración de Expedientes Hospitalarios Clínicos. Conectando la red de salud para un mejor servicio.</P>
+                <p>Sistema de Integración de Expedientes Hospitalarios Clínicos. Conectando la red de salud para un mejor servicio.</p>
             </div>
             <div class="footer-system">
                 <h4>Sistema</h4>
@@ -219,18 +228,20 @@
                     <li><a href="#">Registrarse</a></li>
                     <li><a href="#">Hospitales</a></li>
                     <li><a href="#">Soporte</a></li>
+                </ul>
             </div>
             <div class="footer-legal">
                 <h4>Legal</h4>
                 <ul>
-                    <li><a href="#">Politica de privacidad</a></li>
-                    <li><a href="#">Terminos de uso</a></li>
+                    <li><a href="#">Política de privacidad</a></li>
+                    <li><a href="#">Términos de uso</a></li>
                     <li><a href="#">Consentimiento de datos</a></li>
+                </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 SIEHC. Todos los derechos reservados.</p>
-            <p>Hecho con <img src="../src/assets/icons8-me-gusta-50.png"> para la salud</p>
+            <p>&copy; 2026 SIEHC. Todos los derechos reservados.</p>
+            <p>Hecho con <img src="../src/assets/icons8-me-gusta-50.png" alt="Me gusta"> para la salud</p>
         </div>
     </footer>
 </body>
