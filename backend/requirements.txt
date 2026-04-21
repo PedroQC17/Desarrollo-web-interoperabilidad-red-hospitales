@@ -1,0 +1,9 @@
+# requirements.txt ya debe tener esto:
+django
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
+python-dotenv
+
+# Instalar:
+pip install -r requirements.txt
