@@ -29,8 +29,8 @@ const PatientSidebar = () => {
             <User className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">Juan Pérez</p>
-            <p className="text-xs text-muted-foreground">Paciente</p>
+            <p className="text-sm font-semibold text-sidebar-foreground">Paciente</p>
+            {/*Agregar el nombre del paciente*/}
           </div>
         </div>
       </div>

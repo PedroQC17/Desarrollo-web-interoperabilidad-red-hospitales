@@ -27,8 +27,7 @@ const AdminSidebar = () => {
             <Shield className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">Ana Mendoza</p>
-            <p className="text-xs text-muted-foreground">Administrador</p>
+            <p className="text-sm font-semibold text-sidebar-foreground">Administrador</p>
           </div>
         </div>
       </div>

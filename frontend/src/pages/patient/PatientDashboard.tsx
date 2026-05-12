@@ -1,7 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, FileText, Receipt, ShieldCheck, Clock, Activity } from "lucide-react";
+import { CalendarDays, FileText, Receipt, ShieldCheck, Clock, Activity, User } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/lib/authContext";
 
 const stats = [
   { label: "Citas Pendientes", value: "3", icon: CalendarDays, color: "text-accent" },
@@ -26,13 +26,30 @@ const recentActivity = [
 ];
 
 const PatientDashboard = () => {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Bienvenido, Juan</h1>
-        <p className="text-muted-foreground mt-1">Aquí tienes un resumen de tu actividad médica.</p>
-      </div>
+
+      {/* Perfil */}
+      <Card className="border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <User className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Bienvenido, {user?.nombre}
+              </h1>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">
+                {user?.tipo_usuario}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -50,7 +67,6 @@ const PatientDashboard = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Recent activity */}
         <Card className="lg:col-span-2 border-border">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
@@ -73,7 +89,6 @@ const PatientDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Quick actions */}
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="text-lg">Accesos Rápidos</CardTitle>

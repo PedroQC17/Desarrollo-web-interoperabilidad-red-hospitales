@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Pill, BarChart3, TrendingUp, Activity, Stethoscope } from "lucide-react";
+import { Building2, Users, Pill, BarChart3, TrendingUp, Activity, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/authContext";
 
 const stats = [
   { label: "Hospitales en Red", value: "12", icon: Building2, color: "text-primary", trend: "+2 este mes" },
@@ -33,13 +34,32 @@ const topHospitals = [
 ];
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Panel de Administración</h1>
-        <p className="text-muted-foreground mt-1">Vista general del sistema y la red hospitalaria.</p>
-      </div>
 
+      {/* Perfil */}
+      <Card className="border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Shield className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Bienvenido, {user?.nombre}
+              </h1>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">
+                {user?.tipo_usuario}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label} className="border-border">
