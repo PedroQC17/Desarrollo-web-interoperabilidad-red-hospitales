@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Stethoscope, Pill, Users, Clock, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/authContext";
 
 const stats = [
   { label: "Citas Hoy", value: "6", icon: CalendarDays, color: "text-accent" },
@@ -26,13 +27,32 @@ const upcomingAppointments = [
 ];
 
 const DoctorDashboard = () => {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Bienvenido, Dr. García</h1>
-        <p className="text-muted-foreground mt-1">Resumen de su actividad médica de hoy.</p>
-      </div>
 
+      {/* Perfil */}
+      <Card className="border-border">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Stethoscope className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Bienvenido, Dr. {user?.nombre}
+              </h1>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+              <span className="inline-block mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full capitalize">
+                {user?.tipo_usuario}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
           <Card key={stat.label} className="border-border">

@@ -19,24 +19,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return user
 
 
-# 🔹 Paciente
-class PacienteSerializer(serializers.ModelSerializer):
-    usuario = UsuarioSerializer()
-
-    class Meta:
-        model = Paciente
-        fields = '__all__'
-
-    def create(self, validated_data):
-        usuario_data = validated_data.pop('usuario')
-        usuario_data['tipo_usuario'] = 'paciente'
-
-        usuario = Usuario.objects.create_user(**usuario_data)
-        paciente = Paciente.objects.create(usuario=usuario, **validated_data)
-
-        return paciente
-
-
 # CLASES DE REGISTRO Y LOGIN
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -69,7 +51,26 @@ class LoginSerializer(serializers.Serializer):
 
 
 
-# 🔹 Medico
+# Paciente
+class PacienteSerializer(serializers.ModelSerializer):
+    usuario = UsuarioSerializer()
+
+    class Meta:
+        model = Paciente
+        fields = '__all__'
+
+    def create(self, validated_data):
+        usuario_data = validated_data.pop('usuario')
+        usuario_data['tipo_usuario'] = 'paciente'
+
+        usuario = Usuario.objects.create_user(**usuario_data)
+        paciente = Paciente.objects.create(usuario=usuario, **validated_data)
+
+        return paciente
+
+
+
+#  Medico
 class MedicoSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer()
 
@@ -87,7 +88,7 @@ class MedicoSerializer(serializers.ModelSerializer):
         return medico
 
 
-# 🔹 Admin
+#  Admin
 class AdministradorSerializer(serializers.ModelSerializer):
 
     usuario = UsuarioSerializer()
@@ -105,4 +106,10 @@ class AdministradorSerializer(serializers.ModelSerializer):
 
         return admin
     
+
+
+class UsuarioListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['id', 'email', 'nombre', 'telecom', 'genero', 'fec_nac', 'tipo_usuario', 'is_active']
 

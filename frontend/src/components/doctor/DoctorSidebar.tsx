@@ -27,8 +27,10 @@ const DoctorSidebar = () => {
             <Stethoscope className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">Dr. Carlos García</p>
-            <p className="text-xs text-muted-foreground">Cardiólogo</p>
+            {/*Agregar el nombre del medico*/}
+            <p className="text-sm font-semibold text-sidebar-foreground">Médico</p>
+            {/*Agregar la especialidad del medico*/}
+            
           </div>
         </div>
       </div>
