@@ -1,10 +1,32 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import MedicamentoViewSet
+
+from .views import (
+    MedicamentoViewSet,
+    CatalogoMedicamentosView,
+    DespacharMedicamentosView,
+    MisDespachoView,
+    MisFacturasMedicamentosView,
+)
 
 router = DefaultRouter()
-router.register(r'medicamentos', MedicamentoViewSet, basename='medicamento')
+router.register(r"medicamentos", MedicamentoViewSet, basename="medicamento")
 
 urlpatterns = [
-    path('', include(router.urls)),
+
+    # ── HU11 — Catálogo paginado para el médico y paciente ────────────────
+    path("catalogo/",                      CatalogoMedicamentosView.as_view(),  name="catalogo-medicamentos"),
+
+    # ── HU12 — Despacho de medicamentos por cita ─────────────────────────────
+    path("despachar/<int:cita_pk>/", DespacharMedicamentosView.as_view(), name="despachar-medicamentos"),
+    path("medicamentos/despachar/<int:cita_pk>/", DespacharMedicamentosView.as_view(), name="despachar-medicamentos-alt"),
+
+    # ── HU12+ — Listar despachos del médico ────────────────────────────────────
+    path("mis-despachos/",                 MisDespachoView.as_view(), name="mis-despachos"),
+
+    # ── Paciente — Listar facturas de medicamentos ─────────────────────────────
+    path("mis-facturas-medicamentos/",     MisFacturasMedicamentosView.as_view(), name="mis-facturas-medicamentos"),
+
+    # ── CRUD admin (router existente) ─────────────────────────────────────────
+    path("", include(router.urls)),
 ]

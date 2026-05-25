@@ -1,41 +1,154 @@
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, Search, Pill, ShoppingCart, User } from "lucide-react";
-import { useState } from "react";
+import { Package, Search, Pill, ShoppingCart, User, Loader2, AlertCircle } from "lucide-react";
+import { useState as useState2 } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const medications = [
-  { id: 1, name: "Losartán 50mg", generic: "Losartán Potásico", category: "Antihipertensivo", stock: 240, unit: "tabletas", price: 0.80 },
-  { id: 2, name: "Amlodipino 5mg", generic: "Amlodipino Besilato", category: "Antihipertensivo", stock: 180, unit: "tabletas", price: 0.50 },
-  { id: 3, name: "Atorvastatina 20mg", generic: "Atorvastatina Cálcica", category: "Hipolipemiante", stock: 120, unit: "tabletas", price: 1.20 },
-  { id: 4, name: "Metformina 850mg", generic: "Metformina HCl", category: "Antidiabético", stock: 300, unit: "tabletas", price: 0.40 },
-  { id: 5, name: "Furosemida 40mg", generic: "Furosemida", category: "Diurético", stock: 150, unit: "tabletas", price: 0.35 },
-  { id: 6, name: "Enalapril 10mg", generic: "Enalapril Maleato", category: "IECA", stock: 200, unit: "tabletas", price: 0.45 },
-  { id: 7, name: "Propranolol 40mg", generic: "Propranolol HCl", category: "Betabloqueante", stock: 90, unit: "tabletas", price: 0.60 },
-  { id: 8, name: "Salbutamol Inhalador", generic: "Salbutamol", category: "Broncodilatador", stock: 45, unit: "unidades", price: 12.00 },
-  { id: 9, name: "Rivaroxabán 20mg", generic: "Rivaroxabán", category: "Anticoagulante", stock: 30, unit: "tabletas", price: 8.50 },
-  { id: 10, name: "Espironolactona 25mg", generic: "Espironolactona", category: "Diurético", stock: 0, unit: "tabletas", price: 0.55 },
-];
+interface Medicamento {
+  id: number;
+  nombre: string;
+  costo: string | number;
+  stock: number;
+  tipo: string;
+}
 
-const dispatchHistory = [
-  { id: 1, date: "15 Abr 2026", patient: "Juan Pérez", medications: "Losartán 50mg x30, Amlodipino 5mg x30", total: "S/ 39.00" },
-  { id: 2, date: "14 Abr 2026", patient: "María Torres", medications: "Propranolol 40mg x60", total: "S/ 36.00" },
-  { id: 3, date: "14 Abr 2026", patient: "Luis Ramos", medications: "Furosemida 40mg x30, Enalapril 10mg x60, Espironolactona 25mg x30", total: "S/ 54.00" },
-  { id: 4, date: "10 Abr 2026", patient: "Pedro Vargas", medications: "Rivaroxabán 20mg x30", total: "S/ 255.00" },
-];
+interface Despacho {
+  id: number;
+  cita: number;
+  paciente_id: number;
+  paciente_nombre: string;
+  medico_nombre: string;
+  fecha_despacho: string;
+  total: string | number;
+  items: Array<{
+    medicamento_id: number;
+    medicamento_nombre: string;
+    cantidad: number;
+    precio_unitario: string | number;
+    subtotal: string | number;
+  }>;
+}
+
+interface Cita {
+  id: number;
+
+  paciente: number;
+  paciente_nombre: string;
+
+  inicio: string;
+}
 
 const DoctorMedicamentos = () => {
+  const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
+  const [citas, setCitas] = useState<Cita[]>([]);
+  const [despachos, setDespachos] = useState<Despacho[]>([]);
   const [search, setSearch] = useState("");
-  const filtered = medications.filter(m =>
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.generic.toLowerCase().includes(search.toLowerCase())
+  const [loading, setLoading] = useState(false);
+  const [selectedCita, setSelectedCita] = useState<string>("");
+  const [despachoItems, setDespachoItems] = useState<Array<{ medicamento: number; cantidad: number }>>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const fetchMedicamentos = async () => {
+    setLoading(true);
+    try {
+      const data = await api("/medicamentos/catalogo/");
+      setMedicamentos(Array.isArray(data?.results) ? data.results : []);
+    } catch (err) {
+      setMedicamentos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCitas = async () => {
+    try {
+      const data = await api("/citas/mis-citas-medico/?estado=confirmada");
+      setCitas(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setCitas([]);
+    }
+  };
+
+  const fetchDespachos = async () => {
+    try {
+      const data = await api("/medicamentos/mis-despachos/");
+      setDespachos(Array.isArray(data?.results) ? data.results : []);
+    } catch (err) {
+      setDespachos([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchMedicamentos();
+    fetchCitas();
+    fetchDespachos();
+  }, []);
+
+  const filtered = medicamentos.filter((m) =>
+    m.nombre.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleAddItem = (medId: number) => {
+    setDespachoItems((prev) => {
+      const existing = prev.find((item) => item.medicamento === medId);
+      if (existing) {
+        return prev.map((item) =>
+          item.medicamento === medId
+            ? { ...item, cantidad: item.cantidad + 1 }
+            : item
+        );
+      }
+      return [...prev, { medicamento: medId, cantidad: 1 }];
+    });
+  };
+
+  const handleRemoveItem = (medId: number) => {
+    setDespachoItems((prev) => prev.filter((item) => item.medicamento !== medId));
+  };
+
+  const handleDespacho = async () => {
+    setError(null);
+    setSuccess(null);
+
+    if (!selectedCita) {
+      setError("Debes seleccionar una cita");
+      return;
+    }
+
+    if (despachoItems.length === 0) {
+      setError("Debes agregar al menos un medicamento");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await api(`/medicamentos/despachar/${selectedCita}/`, {
+        method: "POST",
+        body: JSON.stringify({ items: despachoItems }),
+      });
+      setSuccess("Medicamentos despachados correctamente");
+      setDespachoItems([]);
+      setSelectedCita("");
+      // Recargar catálogo y despachos
+      fetchMedicamentos();
+      fetchDespachos();
+    } catch (err: any) {
+      setError(err?.error || "Error al despachar medicamentos");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
 
   return (
     <div className="space-y-8">
@@ -52,44 +165,139 @@ const DoctorMedicamentos = () => {
               Despachar
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Despachar Medicamentos</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Paciente</Label>
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar paciente" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="juan">Juan Pérez</SelectItem>
-                    <SelectItem value="maria">María Torres</SelectItem>
-                    <SelectItem value="luis">Luis Ramos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Receta asociada</Label>
-                <Select>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar receta" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="r1">Receta #001 — Juan Pérez (15 Abr)</SelectItem>
-                    <SelectItem value="r2">Receta #002 — María Torres (14 Abr)</SelectItem>
-                    <SelectItem value="r3">Receta #003 — Luis Ramos (14 Abr)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Medicamentos a despachar</Label>
-                <div className="text-sm text-muted-foreground bg-secondary/50 rounded-lg p-3">
-                  Seleccione una receta para cargar automáticamente los medicamentos.
+              {error && (
+                <div className="bg-destructive/10 text-destructive p-3 rounded-lg text-sm flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
                 </div>
+              )}
+              {success && (
+                <div className="bg-green-100 text-green-700 p-3 rounded-lg text-sm">
+                  {success}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Seleccionar cita</Label>
+                <Select value={selectedCita} onValueChange={setSelectedCita}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar cita del paciente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {citas.map((cita) => (
+                      <SelectItem key={cita.id} value={cita.id.toString()}>
+                        {cita.paciente_nombre} - {new Date(cita.inicio).toLocaleDateString()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {selectedCita && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Medicamentos a despachar</Label>
+                    <div className="bg-secondary/30 border border-border rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
+                      {medicamentos.map((med) => {
+                        const item = despachoItems.find((i) => i.medicamento === med.id);
+                        return (
+                          <div key={med.id} className="flex items-center justify-between">
+                            <span className="text-sm">{med.nombre}</span>
+                            {item ? (
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setDespachoItems((prev) =>
+                                      prev.map((i) =>
+                                        i.medicamento === med.id && i.cantidad > 1
+                                          ? { ...i, cantidad: i.cantidad - 1 }
+                                          : i
+                                      )
+                                    )
+                                  }
+                                >
+                                  -
+                                </Button>
+                                <span className="w-8 text-center text-sm font-semibold">{item.cantidad}</span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setDespachoItems((prev) =>
+                                      prev.map((i) =>
+                                        i.medicamento === med.id
+                                          ? { ...i, cantidad: i.cantidad + 1 }
+                                          : i
+                                      )
+                                    )
+                                  }
+                                >
+                                  +
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveItem(med.id)}
+                                  className="text-destructive"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAddItem(med.id)}
+                              >
+                                Agregar
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="bg-secondary/30 border border-border rounded-lg p-3 space-y-2">
+                    <h4 className="font-semibold text-sm">Medicamentos seleccionados:</h4>
+                    {despachoItems.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">Ningún medicamento seleccionado</p>
+                    ) : (
+                      <ul className="space-y-1">
+                        {despachoItems.map((item) => {
+                          const med = medicamentos.find((m) => m.id === item.medicamento);
+                          return (
+                            <li key={item.medicamento} className="text-sm flex justify-between">
+                              <span>{med?.nombre}</span>
+                              <span className="font-semibold">x{item.cantidad}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              )}
+
               <div className="flex justify-end gap-3 pt-2">
                 <DialogClose asChild>
                   <Button variant="outline">Cancelar</Button>
                 </DialogClose>
-                <Button>Confirmar Despacho</Button>
+                <Button
+                  onClick={handleDespacho}
+                  disabled={submitting || !selectedCita || despachoItems.length === 0}
+                  className="gap-2"
+                >
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {submitting ? "Despachando..." : "Confirmar Despacho"}
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -112,65 +320,108 @@ const DoctorMedicamentos = () => {
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre genérico o comercial..."
+              placeholder="Buscar medicamento..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
             />
           </div>
 
-          <div className="border border-border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Medicamento</TableHead>
-                  <TableHead className="hidden sm:table-cell">Nombre Genérico</TableHead>
-                  <TableHead className="hidden md:table-cell">Categoría</TableHead>
-                  <TableHead className="text-right">Stock</TableHead>
-                  <TableHead className="text-right hidden sm:table-cell">Precio</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((med) => (
-                  <TableRow key={med.id}>
-                    <TableCell className="font-medium">{med.name}</TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">{med.generic}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Badge variant="secondary" className="text-xs">{med.category}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className={med.stock === 0 ? "text-destructive font-semibold" : med.stock < 50 ? "text-yellow-600 font-semibold" : "text-foreground"}>
-                        {med.stock} {med.unit}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right hidden sm:table-cell">S/ {med.price.toFixed(2)}</TableCell>
+          {loading ? (
+            <div className="flex items-center justify-center py-12 gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <span className="text-muted-foreground">Cargando medicamentos...</span>
+            </div>
+          ) : (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Medicamento</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                    <TableHead className="text-right">Stock</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Precio</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((med) => (
+                    <TableRow key={med.id}>
+                      <TableCell className="font-medium">{med.nombre}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge variant="secondary" className="text-xs">
+                          {med.tipo}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={
+                            med.stock === 0
+                              ? "text-destructive font-semibold"
+                              : med.stock < 50
+                              ? "text-yellow-600 font-semibold"
+                              : "text-foreground"
+                          }
+                        >
+                          {med.stock} unid.
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">
+                        S/ {Number(med.costo).toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="despachos" className="mt-6 space-y-4">
-          {dispatchHistory.map((d) => (
-            <Card key={d.id} className="border-border">
-              <CardContent className="p-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-semibold text-foreground">{d.patient}</h3>
-                      <p className="text-xs text-muted-foreground">{d.date}</p>
-                      <p className="text-sm text-foreground/80">{d.medications}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm font-bold text-foreground">{d.total}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {despachos.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingCart className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">
+                No hay despachos realizados aún.
+              </p>
+            </div>
+          ) : (
+            <div className="border border-border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cita</TableHead>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead className="text-right hidden sm:table-cell">Items</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right hidden md:table-cell">Fecha</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {despachos.map((despacho) => (
+                    <TableRow key={despacho.id}>
+                      <TableCell className="font-medium">#{despacho.cita}</TableCell>
+                      <TableCell>{despacho.paciente_nombre}</TableCell>
+                      <TableCell className="text-right hidden sm:table-cell">
+                        {despacho.items.length} medicamento(s)
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        S/ {Number(despacho.total).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right hidden md:table-cell text-sm text-muted-foreground">
+                        {new Date(despacho.fecha_despacho).toLocaleDateString('es-PE', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
