@@ -15,6 +15,6 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
     path('profile/',ProfileView.as_view()),
-     path('admin/usuarios/', UsuarioListView.as_view()),  # ← nuevo endpoint admin
+    path('admin/usuarios/', UsuarioListView.as_view()), 
     path('<int:pk>/toggle-activo/', toggle_activo),
 ]

@@ -31,6 +31,7 @@ import DoctorHistoriales from "./pages/doctor/DoctorHistoriales.tsx";
 import DoctorDiagnosticos from "./pages/doctor/DoctorDiagnosticos.tsx";
 import DoctorRecetas from "./pages/doctor/DoctorRecetas.tsx";
 import DoctorMedicamentos from "./pages/doctor/DoctorMedicamentos.tsx";
+import DoctorAtencion from "./pages/doctor/DoctorAtencion.tsx";
 
 import AdminLayout from "./layouts/AdminLayout.tsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.tsx";
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="diagnosticos" element={<DoctorDiagnosticos />} />
               <Route path="recetas" element={<DoctorRecetas />} />
               <Route path="medicamentos" element={<DoctorMedicamentos />} />
+              <Route path="atencion/:citaId" element={<DoctorAtencion />} />
             </Route>
 
             {/* Admin */}

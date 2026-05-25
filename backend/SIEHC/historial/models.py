@@ -9,7 +9,7 @@ class Historial(models.Model):
         related_name='historial'
     )
     fecha_creacion = models.DateField(auto_now_add=True)
-    activo         = models.BooleanField(default=True)
+    activo         = models.BooleanField(default=True) #consentimiento
 
     class Meta:
         verbose_name = 'Historial médico'

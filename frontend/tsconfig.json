@@ -1,24 +1,46 @@
 {
   "compilerOptions": {
+    /* Lenguaje y entorno */
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "useDefineForClassFields": true,
+
+    /* Modulos */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+
+    /* Path alias - fuente única de verdad */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    /* Emisión */
+    "noEmit": true,
     "allowJs": true,
+
+    /* Interoperabilidad de modulos */
+    "esModuleInterop": true,
+    "isolatedModules": true,
+
+    /* Verificación de tipos */
+    "strict": false,
     "noImplicitAny": false,
+    "strictNullChecks": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
+    "noFallthroughCasesInSwitch": false,
     "skipLibCheck": true,
-    "strictNullChecks": false
+
+    /* Testing */
+    "types": ["vitest/globals"]
   },
   "files": [],
   "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.node.json"
-    }
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
   ]
 }
