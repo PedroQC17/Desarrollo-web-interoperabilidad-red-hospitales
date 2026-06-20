@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PacienteViewSet, MedicoViewSet, AdministradorViewSet, LoginView,RegisterView,ProfileView,UsuarioListView
+from rest_framework_simplejwt.views import TokenRefreshView
+from .views import PacienteViewSet, MedicoViewSet, AdministradorViewSet, LoginView, RegisterView, ProfileView, UsuarioListView
 
 from .views import toggle_activo
 
@@ -14,7 +15,8 @@ urlpatterns = [
     path('', include(router.urls)),
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
-    path('profile/',ProfileView.as_view()),
-    path('admin/usuarios/', UsuarioListView.as_view()), 
+    path('profile/', ProfileView.as_view()),
+    path('token/refresh/', TokenRefreshView.as_view()),  # 👈 nuevo
+    path('admin/usuarios/', UsuarioListView.as_view()),
     path('<int:pk>/toggle-activo/', toggle_activo),
 ]

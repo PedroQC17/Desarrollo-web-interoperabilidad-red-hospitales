@@ -190,14 +190,38 @@ const PatientCitas = () => {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const handleSubmit = async () => {
-    setFormError("");
-    if (!form.hospital || !form.especialidad || !form.medico || !form.fecha || !form.hora || !form.motivo) {
-      setFormError("Completa todos los campos obligatorios antes de solicitar la cita.");
-      return;
-    }
-    const inicio = new Date(`${form.fecha}T${form.hora}`);
-    if (Number.isNaN(inicio.getTime())) { setFormError("La fecha o la hora no son válidas."); return; }
+const handleSubmit = async () => {
+  setFormError("");
+
+  if (!form.hospital || !form.especialidad || !form.medico || !form.fecha || !form.hora || !form.motivo) {
+    setFormError("Completa todos los campos obligatorios antes de solicitar la cita.");
+    return;
+  }
+
+  // Fecha no puede ser pasada
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const fechaSeleccionada = new Date(form.fecha);
+  if (fechaSeleccionada < hoy) {
+    setFormError("La fecha de la cita no puede ser en el pasado.");
+    return;
+  }
+
+  // Hora en rango laboral (7:00 - 20:00)
+  const [horas, minutos] = form.hora.split(":").map(Number);
+  if (horas < 7 || horas >= 20) {
+    setFormError("La hora debe estar entre 7:00 am y 8:00 pm.");
+    return;
+  }
+
+  // Motivo mínimo de caracteres
+  if (form.motivo.trim().length < 5) {
+    setFormError("El motivo de consulta debe tener al menos 5 caracteres.");
+    return;
+  }
+
+  const inicio = new Date(`${form.fecha}T${form.hora}`);
+  if (Number.isNaN(inicio.getTime())) { setFormError("La fecha o la hora no son válidas."); return; }
 
     const medicoObj = doctors.find((d) => String(d.id) === form.medico);
     const fin = new Date(inicio.getTime() + 30 * 60 * 1000);

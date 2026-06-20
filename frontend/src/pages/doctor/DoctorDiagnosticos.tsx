@@ -189,12 +189,24 @@ const DoctorDiagnosticos = () => {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleSubmitDiagnostico = () => {
-    if (!diagForm.estado_clinico) return setFormError("El estado clínico es obligatorio.");
-    if (!diagForm.categoria) return setFormError("La categoría es obligatoria.");
-    if (!diagForm.severidad) return setFormError("La severidad es obligatoria.");
-    if (!diagForm.ubicacion) return setFormError("La ubicación anatómica es obligatoria.");
-    if (diagForm.edad_inicio === "") return setFormError("La edad de inicio es obligatoria.");
-    if (!diagForm.descripcion_inicio) return setFormError("La descripción es obligatoria.");
+  if (!diagForm.estado_clinico.trim())
+    return setFormError("El estado clínico es obligatorio.");
+  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\-]+$/.test(diagForm.estado_clinico.trim()))
+    return setFormError("El estado clínico solo debe contener letras.");
+  if (!diagForm.categoria.trim())
+    return setFormError("La categoría es obligatoria.");
+  if (!diagForm.severidad)
+    return setFormError("La severidad es obligatoria.");
+  if (!diagForm.ubicacion.trim())
+    return setFormError("La ubicación anatómica es obligatoria.");
+  if (diagForm.edad_inicio === "")
+    return setFormError("La edad de inicio es obligatoria.");
+  if (Number(diagForm.edad_inicio) < 0 || Number(diagForm.edad_inicio) > 120)
+    return setFormError("La edad de inicio debe estar entre 0 y 120 años.");
+  if (!diagForm.descripcion_inicio.trim())
+    return setFormError("La descripción es obligatoria.");
+  if (diagForm.descripcion_inicio.trim().length < 10)
+    return setFormError("La descripción debe tener al menos 10 caracteres.");
 
     withSubmit(async () => {
       await api(`/citas/${selected!.id}/diagnostico/`, {
@@ -217,13 +229,21 @@ const DoctorDiagnosticos = () => {
   };
 
   const handleSubmitReceta = () => {
-    const { medicamentoId, intencion, categoria, prioridad, instruccion_dosis, cantidad_suministrada } = recetaForm;
-    if (!medicamentoId) return setFormError("Debes seleccionar un medicamento.");
-    if (!intencion) return setFormError("La intención es obligatoria.");
-    if (!categoria) return setFormError("La categoría es obligatoria.");
-    if (!prioridad) return setFormError("La prioridad es obligatoria.");
-    if (!instruccion_dosis) return setFormError("Las instrucciones de dosis son obligatorias.");
-    if (!cantidad_suministrada) return setFormError("La cantidad es obligatoria.");
+  const { medicamentoId, intencion, categoria, prioridad, instruccion_dosis, cantidad_suministrada } = recetaForm;
+  if (!medicamentoId)
+    return setFormError("Debes seleccionar un medicamento.");
+  if (!intencion.trim())
+    return setFormError("La intención es obligatoria.");
+  if (!categoria)
+    return setFormError("La categoría es obligatoria.");
+  if (!prioridad)
+    return setFormError("La prioridad es obligatoria.");
+  if (!instruccion_dosis.trim())
+    return setFormError("Las instrucciones de dosis son obligatorias.");
+  if (!cantidad_suministrada)
+    return setFormError("La cantidad es obligatoria.");
+  if (Number(cantidad_suministrada) < 1 || Number(cantidad_suministrada) > 999)
+    return setFormError("La cantidad debe estar entre 1 y 999 unidades.");
 
     withSubmit(async () => {
       await api(`/citas/${selected!.id}/receta/`, {

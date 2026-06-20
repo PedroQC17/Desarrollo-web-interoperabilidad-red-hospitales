@@ -80,7 +80,18 @@ const AdminHospitales = () => {
   // ── Crear ─────────────────────────────────────────────────────────────────
   const crearHospital = async () => {
     const { nombre, contacto, especialidad, ubicacion, periodo, tipo } = form;
-    if (!nombre || !contacto || !especialidad || !ubicacion || !periodo || !tipo) {
+if (!nombre.trim() || !contacto.trim() || !especialidad.trim() || !ubicacion.trim() || !periodo.trim() || !tipo) {
+  toast.error("Completa todos los campos obligatorios.");
+  return;
+}
+if (nombre.trim().length < 3) {
+  toast.error("El nombre del hospital debe tener al menos 3 caracteres.");
+  return;
+}
+if (!/^[0-9\+\-\s\(\)]+$/.test(contacto.trim())) {
+  toast.error("El contacto solo debe contener números y caracteres de teléfono (+, -, espacios).");
+  return;
+}
       toast.error("Completa los campos obligatorios");
       return;
     }
