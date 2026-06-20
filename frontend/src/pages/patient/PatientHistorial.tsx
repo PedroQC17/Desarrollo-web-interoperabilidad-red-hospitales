@@ -158,43 +158,36 @@ const SubirHistorialModal = ({ onSuccess }: SubirModalProps) => {
     }
   };
 
-  const handleSubmitObservacion = async () => {
-    if (!motivo || !descripcionObs) {
-      setError("Completa los campos obligatorios.");
-      return;
-    }
+const handleSubmitObservacion = async () => {
+  if (!motivo.trim()) {
+    setError("El motivo de consulta es obligatorio.");
+    return;
+  }
+  if (motivo.trim().length < 5) {
+    setError("El motivo debe tener al menos 5 caracteres.");
+    return;
+  }
+  if (!descripcionObs.trim()) {
+    setError("La descripción es obligatoria.");
+    return;
+  }
+  if (descripcionObs.trim().length < 10) {
+    setError("La descripción debe tener al menos 10 caracteres.");
+    return;
+  }
     setSubmitLoading(true);
     setError(null);
 
     try {
-      // Si hay PDF, enviarlo primero al nuevo endpoint
       if (archivoPdf) {
-        console.log("📄 Enviando PDF:", archivoPdf.name, archivoPdf.size, "bytes");
         const formData = new FormData();
         formData.append("archivo", archivoPdf);
 
-        const token = localStorage.getItem("access");
-        console.log("🔑 Token:", token ? "presente" : "ausente");
-        
-        const resPdf = await fetch(
-          "http://127.0.0.1:8000/api/historiales/subir-pdf/",
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-          }
-        );
-        
-        console.log("✅ Respuesta PDF:", resPdf.status, resPdf.statusText);
-        
-        if (!resPdf.ok) {
-          const err = await resPdf.json();
-          console.error("❌ Error al procesar PDF:", err);
-          throw new Error(err.error ?? "Error al procesar el PDF.");
-        }
-        
-        const dataPdf = await resPdf.json();
-        console.log("📊 Resumen PDF:", dataPdf.resumen);
+        const dataPdf = await api("/historiales/subir-pdf/", {
+          method: "POST",
+          body: formData,
+        });
+
         setResumenPdf(dataPdf.resumen);
       }
 

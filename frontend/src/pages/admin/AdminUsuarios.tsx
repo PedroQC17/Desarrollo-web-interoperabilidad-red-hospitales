@@ -71,13 +71,8 @@ const AdminUsuarios = () => {
       // PATCH sobre el usuario base no existe directo, usamos el usuario
       await api(`/usuarios/admin/usuarios/`, { method: "GET" }); // solo para verificar token
 
-      // Patch directo sobre el modelo usuario vía endpoint dedicado
-      await fetch(`http://127.0.0.1:8000/api/usuarios/${u.id}/toggle-activo/`, {
+      await api(`/usuarios/${u.id}/toggle-activo/`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access")}`,
-        },
         body: JSON.stringify({ is_active: !u.is_active }),
       });
 
@@ -114,8 +109,38 @@ const AdminUsuarios = () => {
   // ── Crear usuario ─────────────────────────────────────────────────────────
   const crearUsuario = async () => {
     const { nombre, email, password, telecom, genero, fec_nac } = form;
-    if (!nombre || !email || !password || !telecom || !genero || !fec_nac) {
-      toast.error("Completa todos los campos");
+    if (!nombre.trim() || !email.trim() || !password.trim() || !telecom.trim() || !genero || !fec_nac) {
+      toast.error("Completa todos los campos obligatorios.");
+      return;
+    }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre.trim())) {
+      toast.error("El nombre solo debe contener letras y espacios.");
+      return;
+    }
+    if (nombre.trim().split(/\s+/).length < 2) {
+      toast.error("Ingresa el nombre completo (nombre y apellido).");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.com$/i.test(email.trim())) {
+      toast.error("El correo debe tener '@' y terminar en '.com'.");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    if (!/^[0-9]{9}$/.test(telecom.trim())) {
+      toast.error("El teléfono debe tener exactamente 9 dígitos numéricos.");
+      return;
+    }
+    const añoNac = new Date(fec_nac).getFullYear();
+    const edad   = new Date().getFullYear() - añoNac;
+    if (añoNac < 1950) {
+      toast.error("El año mínimo de nacimiento permitido es 1950.");
+      return;
+    }
+    if (edad < 18) {
+      toast.error("El usuario debe tener al menos 18 años.");
       return;
     }
     setFormLoading(true);
