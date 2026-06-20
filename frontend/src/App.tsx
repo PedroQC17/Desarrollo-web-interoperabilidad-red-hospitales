@@ -5,8 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { AuthProvider } from "./lib/authContext";
-
-
+import { NavigatorSetter } from "./lib/navigate";
 
 import ProtectedRoute from "./components/ProtectedRoute.tsx"
 
@@ -49,6 +48,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <NavigatorSetter />
         <AuthProvider>
           <Routes>
             {/* Públicas */}
