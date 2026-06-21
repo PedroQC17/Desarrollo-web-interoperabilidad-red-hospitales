@@ -146,6 +146,54 @@ class MisDespachoView(APIView):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  HU17 — REPORTE DE VENTAS DE MEDICAMENTOS (admin)
+#  GET /api/medicamentos/reporte-ventas/?desde=&hasta=&hospital=
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ReporteVentasMedicamentosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.db.models import Sum, Count
+        desde = request.query_params.get('desde')
+        hasta = request.query_params.get('hasta')
+        hospital_id = request.query_params.get('hospital')
+
+        items = DespachoItem.objects.select_related(
+            'despacho__cita__medico__usuario__medico__hospital',
+            'medicamento'
+        )
+
+        if desde:
+            items = items.filter(despacho__fecha_despacho__gte=desde)
+        if hasta:
+            items = items.filter(despacho__fecha_despacho__lte=hasta)
+
+        # Ingresos por hospital
+        ingresos_por_hospital = items.values(
+            'despacho__cita__medico__usuario__medico__hospital__id',
+            'despacho__cita__medico__usuario__medico__hospital__nombre',
+        ).annotate(
+            total_ingresos=Sum('subtotal'),
+            total_ventas=Count('id')
+        ).order_by('-total_ingresos')
+
+        # Medicamentos más vendidos (top 10 general)
+        mas_vendidos = items.values(
+            'medicamento__nombre',
+            'medicamento__tipo',
+        ).annotate(
+            total_vendido=Sum('cantidad'),
+            total_ingresos=Sum('subtotal')
+        ).order_by('-total_vendido')[:10]
+
+        return Response({
+            'por_hospital': ingresos_por_hospital,
+            'mas_vendidos': mas_vendidos,
+        })
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  PACIENTE — LISTAR DESPACHOS/FACTURAS DE MEDICAMENTOS
 #  GET /api/medicamentos/mis-facturas-medicamentos/
 # ─────────────────────────────────────────────────────────────────────────────
