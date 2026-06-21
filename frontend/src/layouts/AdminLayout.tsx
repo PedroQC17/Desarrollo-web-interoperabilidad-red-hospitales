@@ -5,7 +5,10 @@ import AdminMobileNav from "@/components/admin/AdminMobileNav";
 import { hideGlobalLoader } from "@/lib/loader";
 
 const AdminLayout = () => {
-  useEffect(() => { hideGlobalLoader(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => hideGlobalLoader(), 1000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
