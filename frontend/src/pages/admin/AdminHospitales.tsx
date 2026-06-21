@@ -3,14 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Search, MapPin, Phone, Edit, Trash2, Clock, Stethoscope } from "lucide-react";
-
+import { Building2, Plus, Search, MapPin, Phone, Edit, Clock, Stethoscope, LogOut } from "lucide-react";
 
 import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 
@@ -26,6 +26,8 @@ type Hospital = {
   periodo: string;
   activo: boolean;
   creado_en: string;
+  fecha_desactivacion: string | null;
+  motivo_desactivacion: string;
 };
 
 type FormHospital = {
@@ -59,12 +61,17 @@ const AdminHospitales = () => {
   const [hospitalEditar, setHospitalEditar] = useState<Hospital | null>(null);
   const [form, setForm]                     = useState<FormHospital>(emptyForm);
   const [formLoading, setFormLoading]       = useState(false);
-  const [deletingIds, setDeletingIds]       = useState<number[]>([]);
+  const [loadingIds, setLoadingIds]         = useState<number[]>([]);
+
+  // Diálogo de desafiliación
+  const [hospitalDesafiliar, setHospitalDesafiliar] = useState<Hospital | null>(null);
+  const [motivoDesafiliar, setMotivoDesafiliar]     = useState("");
+  const [desafiliando, setDesafiliando]             = useState(false);
 
   // ── Cargar ────────────────────────────────────────────────────────────────
   const cargarHospitales = async () => {
     try {
-      const data = await api("/hospitales/hospitales/");
+      const data = await api("/hospitales/hospitales/?activo=true");
       setHospitales(data);
     } catch {
       toast.error("Error al cargar hospitales");
@@ -94,8 +101,9 @@ const AdminHospitales = () => {
       setOpenCrear(false);
       setForm(emptyForm);
       cargarHospitales();
-    } catch {
-      toast.error("Error al registrar hospital");
+    } catch (err: any) {
+      const msg = err?.nombre?.[0] || err?.error || "Error al registrar hospital";
+      toast.error(msg);
     } finally {
       setFormLoading(false);
     }
@@ -135,25 +143,42 @@ const AdminHospitales = () => {
       setHospitalEditar(null);
       setForm(emptyForm);
       cargarHospitales();
-    } catch {
-      toast.error("Error al actualizar hospital");
+    } catch (err: any) {
+      const msg = err?.nombre?.[0] || err?.error || "Error al actualizar hospital";
+      toast.error(msg);
     } finally {
       setFormLoading(false);
     }
   };
 
-  // ── Eliminar ──────────────────────────────────────────────────────────────
-  const eliminarHospital = async (h: Hospital) => {
-    if (!confirm(`¿Eliminar "${h.nombre}"? Esta acción no se puede deshacer.`)) return;
-    setDeletingIds((prev) => [...prev, h.id]);
+  // ── Desafiliar (desactivación suave) ──────────────────────────────────────
+  const abrirDesafiliar = (h: Hospital) => {
+    setHospitalDesafiliar(h);
+    setMotivoDesafiliar("");
+  };
+
+  const confirmarDesafiliar = async () => {
+    if (!hospitalDesafiliar) return;
+    if (!motivoDesafiliar.trim()) {
+      toast.error("Debes ingresar el motivo de la desafiliación.");
+      return;
+    }
+    setDesafiliando(true);
+    setLoadingIds((prev) => [...prev, hospitalDesafiliar.id]);
     try {
-      await api(`/hospitales/hospitales/${h.id}/`, { method: "DELETE" });
-      setHospitales((prev) => prev.filter((x) => x.id !== h.id));
-      toast.success("Hospital eliminado de la red");
+      await api(`/hospitales/hospitales/${hospitalDesafiliar.id}/desafiliar/`, {
+        method: "POST",
+        body: JSON.stringify({ motivo: motivoDesafiliar.trim() }),
+      });
+      toast.success(`Hospital "${hospitalDesafiliar.nombre}" desafiliado correctamente`);
+      setHospitalDesafiliar(null);
+      setMotivoDesafiliar("");
+      cargarHospitales();
     } catch {
-      toast.error("Error al eliminar hospital");
+      toast.error("Error al desafiliar hospital");
     } finally {
-      setDeletingIds((prev) => prev.filter((id) => id !== h.id));
+      setDesafiliando(false);
+      setLoadingIds((prev) => prev.filter((id) => id !== hospitalDesafiliar.id));
     }
   };
 
@@ -273,6 +298,40 @@ const AdminHospitales = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog Desafiliar */}
+      <Dialog open={!!hospitalDesafiliar} onOpenChange={(v) => { if (!v) setHospitalDesafiliar(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Desafiliar Hospital</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de desafiliar <strong>{hospitalDesafiliar?.nombre}</strong>?
+              El hospital dejará de estar disponible en la red.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label>Motivo de la desafiliación <span className="text-destructive">*</span></Label>
+            <Textarea
+              placeholder="Indica el motivo por el cual se desafilia este hospital..."
+              value={motivoDesafiliar}
+              onChange={(e) => setMotivoDesafiliar(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHospitalDesafiliar(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmarDesafiliar}
+              disabled={desafiliando || !motivoDesafiliar.trim()}
+            >
+              {desafiliando ? "Desafiliando..." : "Confirmar Desafiliación"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Buscador */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -287,7 +346,7 @@ const AdminHospitales = () => {
       {/* Cards */}
       {filtrados.length === 0 ? (
         <div className="text-center text-muted-foreground py-12 text-sm">
-          No se encontraron hospitales.
+          No se encontraron hospitales activos.
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
@@ -350,10 +409,11 @@ const AdminHospitales = () => {
                   <Button
                     variant="outline" size="sm"
                     className="text-destructive hover:text-destructive"
-                    disabled={deletingIds.includes(h.id)}
-                    onClick={() => eliminarHospital(h)}
+                    disabled={loadingIds.includes(h.id)}
+                    onClick={() => abrirDesafiliar(h)}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <LogOut className="w-3.5 h-3.5 mr-1" />
+                    Desafiliar
                   </Button>
                 </div>
 
