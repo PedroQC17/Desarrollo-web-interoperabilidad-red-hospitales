@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { login, getProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/authContext";
-import "./auth.css";
+import "./Auth.css";
 import logo from "../../assets/logo-siehc.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
