@@ -69,16 +69,28 @@ TEMPLATES = [
 WSGI_APPLICATION = 'SIEHC.wsgi.application'
 
 # ─── Base de datos ────────────────────────────────────────────────────────────
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'siehc_db',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'localhost',
-        'PORT': '3306',
+import sys
+
+_TESTING = 'test' in sys.argv or 'test_coverage' in sys.argv
+
+if _TESTING:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'test_db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'siehc_db'),
+            'USER': os.getenv('DB_USER', 'root'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'root'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+        }
+    }
 
 # ─── Usuario personalizado ────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'usuarios.Usuario'   # ← le dice a Django cuál es tu user
