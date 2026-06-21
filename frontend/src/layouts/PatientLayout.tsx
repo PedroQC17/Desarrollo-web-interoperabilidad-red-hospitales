@@ -5,7 +5,10 @@ import PatientMobileNav from "@/components/patient/PatientMobileNav";
 import { hideGlobalLoader } from "@/lib/loader";
 
 const PatientLayout = () => {
-  useEffect(() => { hideGlobalLoader(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => hideGlobalLoader(), 1000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="flex min-h-screen bg-background">
       <PatientSidebar />

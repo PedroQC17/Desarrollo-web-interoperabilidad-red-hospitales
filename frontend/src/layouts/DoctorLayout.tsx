@@ -5,7 +5,10 @@ import DoctorMobileNav from "@/components/doctor/DoctorMobileNav";
 import { hideGlobalLoader } from "@/lib/loader";
 
 const DoctorLayout = () => {
-  useEffect(() => { hideGlobalLoader(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => hideGlobalLoader(), 1000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="flex min-h-screen bg-background">
       <DoctorSidebar />
