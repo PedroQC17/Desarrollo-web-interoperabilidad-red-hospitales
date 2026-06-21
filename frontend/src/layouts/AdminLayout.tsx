@@ -1,8 +1,11 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminMobileNav from "@/components/admin/AdminMobileNav";
+import { hideGlobalLoader } from "@/lib/loader";
 
 const AdminLayout = () => {
+  useEffect(() => { hideGlobalLoader(); }, []);
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
