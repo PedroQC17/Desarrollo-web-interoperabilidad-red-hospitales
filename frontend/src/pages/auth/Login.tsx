@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/authContext";
 import "./auth.css";
 import logo from "../../assets/logo-siehc.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { showGlobalLoader, hideGlobalLoader } from "@/lib/loader";
 
 function Login() {
   const [email, setEmail]       = useState("");
@@ -35,10 +36,9 @@ function Login() {
       await login(email, password);
       const user = await getProfile();
 
-      // ✅ Actualiza el contexto global
       setUser(user);
+      showGlobalLoader();
 
-      // ✅ Redirige según el rol real
       if (user.tipo_usuario === "paciente") {
         navigate("/paciente");
       } else if (user.tipo_usuario === "medico") {

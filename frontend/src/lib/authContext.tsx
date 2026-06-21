@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { getProfile } from "./auth";
+import { hideGlobalLoader } from "./loader";
 
 type User = {
   email: string;
@@ -29,12 +30,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem("access");
     if (!token) {
       setLoading(false);
+      hideGlobalLoader();
       return;
     }
     getProfile()
       .then(setUser)
       .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        hideGlobalLoader();
+      });
   }, []);
 
   const logout = () => {
