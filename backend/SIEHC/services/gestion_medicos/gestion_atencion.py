@@ -68,6 +68,10 @@ def registrar_diagnostico(medico: Medico, cita_id: int, datos: dict) -> Diagnost
         if datos.get(campo) is None or datos.get(campo) == "":
             raise ValueError(f"El campo '{campo}' es obligatorio.")
 
+    severidad = datos.get("severidad")
+    if severidad not in dict(Diagnostico.SEVERIDAD_CHOICES):
+        raise ValueError(f"Severidad inválida. Valores válidos: {', '.join(dict(Diagnostico.SEVERIDAD_CHOICES).keys())}.")
+
     with transaction.atomic():
         diagnostico = Diagnostico.objects.create(
             historial=historial,

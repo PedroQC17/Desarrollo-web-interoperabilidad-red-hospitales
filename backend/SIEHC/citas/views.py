@@ -424,3 +424,68 @@ class CitaViewSet(ModelViewSet):
         if hospital:
             qs = qs.filter(medico__hospital_id=hospital)
         return qs
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  HU18 — REPORTE DE UTILIDADES POR SERVICIOS MÉDICOS (admin)
+#  GET /api/citas/reporte-servicios/?desde=&hasta=&hospital=
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ReporteServiciosView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from django.db.models import Sum, Count
+
+        desde = request.query_params.get('desde')
+        hasta = request.query_params.get('hasta')
+        hospital_id = request.query_params.get('hospital')
+
+        citas = Cita.objects.filter(estado='completada')
+
+        if desde:
+            citas = citas.filter(inicio__gte=desde)
+        if hasta:
+            citas = citas.filter(inicio__lte=hasta)
+        if hospital_id:
+            citas = citas.filter(medico__hospital_id=hospital_id)
+
+        # Ingresos por hospital
+        por_hospital = citas.values(
+            'medico__hospital__id',
+            'medico__hospital__nombre',
+        ).annotate(
+            total_ingresos=Sum('costo_servicio'),
+            total_atenciones=Count('id')
+        ).order_by('-total_ingresos')
+
+        # Desglose por tipo de servicio
+        por_servicio = citas.values(
+            'categoria_servicio',
+        ).annotate(
+            total_ingresos=Sum('costo_servicio'),
+            total_atenciones=Count('id')
+        ).order_by('-total_ingresos')
+
+        # Desglose por médico responsable
+        por_medico = citas.values(
+            'medico__usuario__nombre',
+            'medico__especialidad',
+            'medico__hospital__nombre',
+        ).annotate(
+            total_ingresos=Sum('costo_servicio'),
+            total_atenciones=Count('id')
+        ).order_by('-total_ingresos')
+
+        # Totales globales
+        totales = citas.aggregate(
+            total_ingresos=Sum('costo_servicio'),
+            total_atenciones=Count('id'),
+        )
+
+        return Response({
+            'por_hospital': por_hospital,
+            'por_servicio': por_servicio,
+            'por_medico': por_medico,
+            'totales': totales,
+        })

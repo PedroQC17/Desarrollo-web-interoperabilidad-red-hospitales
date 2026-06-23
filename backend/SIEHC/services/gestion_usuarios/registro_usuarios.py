@@ -14,6 +14,9 @@ def register_usuario(email, password, **extra_fields):
     if not password:
         raise ValueError("La contraseña es obligatoria")
 
+    if len(password) < 8:
+        raise ValueError("La contraseña debe tener al menos 8 caracteres")
+
     if Usuario.objects.filter(email=email).exists():
         raise ValueError("El usuario ya existe")
 

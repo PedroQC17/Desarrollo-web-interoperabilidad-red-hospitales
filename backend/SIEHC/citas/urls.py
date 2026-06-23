@@ -19,6 +19,7 @@ from citas.views import (
     RegistrarPagoView,
     # Admin
     CitaViewSet,
+    ReporteServiciosView,
 )
 
 router = DefaultRouter()
@@ -52,5 +53,8 @@ urlpatterns = [
     # ── HU13 — Pago ──────────────────────────────────────────────────────────
     path("<int:pk>/resumen-pago/",ResumenPagoView.as_view(),      name="resumen-pago"),
     path("<int:pk>/pagar/",       RegistrarPagoView.as_view(),    name="registrar-pago"),
+
+    # ── HU18 — Reporte de utilidades por servicios médicos (admin) ─────────────
+    path("reporte-servicios/",    ReporteServiciosView.as_view(), name="reporte-servicios"),
 
 ] + router.urls
