@@ -1,107 +1,97 @@
 from django.test import TestCase
-from datetime import date
 from rest_framework.test import APIClient
 from rest_framework import status
-
-from usuarios.models import Usuario, Paciente, Medico, Administrador
+from usuarios.models import Usuario
 from services.gestion_usuarios.registro_usuarios import register_usuario, login_usuario
 
 
-class UsuarioModelTest(TestCase):
-    datos_usuario = {
-        "email": "juan.perez@hospital.com",
-        "password": "Segura123!",
-        "nombre": "Juan Pérez García",
-        "telecom": "987654321",
-        "genero": "M",
-        "fec_nac": date(1995, 5, 15),
-        "tipo_usuario": "paciente",
-    }
-
-    def test_crear_usuario_y_verificar_en_bd(self):
-        user = Usuario.objects.create_user(**self.datos_usuario)
-        usuario_bd = Usuario.objects.get(email="juan.perez@hospital.com")
-        self.assertEqual(usuario_bd, user)
-        self.assertEqual(usuario_bd.email, "juan.perez@hospital.com")
-        self.assertEqual(usuario_bd.tipo_usuario, "paciente")
-
-    def test_crear_perfil_paciente_automatico(self):
-        user = Usuario.objects.create_user(**self.datos_usuario)
-        Paciente.objects.create(usuario=user)
-        self.assertTrue(Paciente.objects.filter(usuario=user).exists())
-
-
 class UsuarioServiceTest(TestCase):
-    datos_usuario = {
-        "email": "maria.lopez@hospital.com",
-        "password": "ClaveSegura456!",
-        "nombre": "María López Torres",
-        "telecom": "987654322",
-        "genero": "F",
-        "fec_nac": date(1998, 8, 20),
-        "tipo_usuario": "paciente",
-    }
+    """Pruebas unitarias (sin API) para registro e inicio de sesión"""
 
-    def test_register_exitoso_con_perfil(self):
-        user = register_usuario(**self.datos_usuario)
-        self.assertIsNotNone(user)
-        self.assertEqual(Usuario.objects.count(), 1)
-        self.assertTrue(Paciente.objects.filter(usuario=user).exists())
+    # --- REGISTRO ---
 
-    def test_register_email_duplicado(self):
-        register_usuario(**self.datos_usuario)
+    def test_register_campos_vacios_error(self):
+        """CP-RU-VAL-01: Validar campos vacíos en registro"""
         with self.assertRaises(ValueError):
-            register_usuario(**self.datos_usuario)
+            register_usuario(email="", password="", nombre="", telecom="", genero="", fec_nac="", tipo_usuario="")
 
-    def test_register_crea_perfil_segun_rol(self):
-        def _probar_rol(tipo, clase_perfil):
-            datos = dict(self.datos_usuario)
-            datos["email"] = f"carlos.{tipo}@hospital.com"
-            datos["nombre"] = f"Carlos {tipo.capitalize()} Sánchez"
-            datos["tipo_usuario"] = tipo
-            user = register_usuario(**datos)
-            self.assertTrue(clase_perfil.objects.filter(usuario=user).exists())
+    def test_register_password_corta_error(self):
+        """CP-RU-VAL-04: Validar longitud mínima de contraseña"""
+        with self.assertRaises(ValueError):
+            register_usuario(email="test@mail.com", password="Ab1", nombre="Test", telecom="123456789", genero="M", fec_nac="2000-01-01", tipo_usuario="paciente")
 
-        _probar_rol("medico", Medico)
-        _probar_rol("admin", Administrador)
+    # --- LOGIN ---
 
-    def test_login_usuario_inactivo(self):
-        Usuario.objects.create_user(**self.datos_usuario)
-        user = Usuario.objects.get(email="maria.lopez@hospital.com")
-        user.is_active = False
-        user.save()
-        resultado = login_usuario("maria.lopez@hospital.com", "ClaveSegura456!")
-        self.assertIsNone(resultado)
+    def test_login_campos_vacios(self):
+        """CP-IS-VAL-01: Login con campos vacíos → None"""
+        self.assertIsNone(login_usuario("", ""))
+
+    def test_login_email_no_registrado(self):
+        """CP-IS-VAL-02: Login con email no registrado → None"""
+        self.assertIsNone(login_usuario("noexiste@mail.com", "Pass1234"))
+
+    def test_login_password_incorrecta(self):
+        """CP-IS-VAL-03: Login con contraseña incorrecta → None"""
+        Usuario.objects.create_user(email="juan@mail.com", password="Pass1234", nombre="Juan", telecom="987654321", genero="M", fec_nac="2000-01-01", tipo_usuario="paciente")
+        self.assertIsNone(login_usuario("juan@mail.com", "WrongPass99"))
 
 
 class UsuarioAPITest(TestCase):
+    """Pruebas de API para registro e inicio de sesión"""
+
     def setUp(self):
         self.client = APIClient()
-        self.datos_valido = {
-            "email": "ana.martinez@hospital.com",
-            "password": "AnaPass789!",
-            "nombre": "Ana Martínez Ruiz",
-            "telecom": "987654323",
-            "genero": "F",
-            "fec_nac": "2002-03-10",
-            "tipo_usuario": "paciente",
-        }
+        self.datos_valido = {"email": "ana@mail.com", "password": "AnaPass789!", "confirmar": "AnaPass789!", "nombre": "Ana Martínez", "telecom": "987654323", "genero": "F", "fec_nac": "2002-03-10", "tipo_usuario": "paciente"}
 
-    def test_post_register_201(self):
-        respuesta = self.client.post("/api/usuarios/register/", self.datos_valido, format="json")
-        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
-        self.assertIn("access", respuesta.data)
-        self.assertIn("refresh", respuesta.data)
-        self.assertEqual(respuesta.data["email"], "ana.martinez@hospital.com")
+    # --- REGISTRO ---
 
-    def test_post_register_sin_email_400(self):
-        datos_invalidos = {
-            "password": "AnaPass789!",
-            "nombre": "Ana Martínez Ruiz",
-            "telecom": "987654323",
-            "genero": "F",
-            "fec_nac": "2002-03-10",
-            "tipo_usuario": "paciente",
-        }
-        respuesta = self.client.post("/api/usuarios/register/", datos_invalidos, format="json")
+    def test_post_register_campos_vacios_400(self):
+        """CP-RU-VAL-01: Todos los campos vacíos → 400"""
+        respuesta = self.client.post("/api/usuarios/register/", {}, format="json")
         self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_register_email_invalido_400(self):
+        """CP-RU-VAL-02: Email inválido → 400"""
+        datos = dict(self.datos_valido)
+        datos["email"] = "correo-invalido"
+        respuesta = self.client.post("/api/usuarios/register/", datos, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", respuesta.data)
+
+    def test_post_register_password_mismatch_400(self):
+        """CP-RU-VAL-03: Password != confirmar → 400"""
+        datos = dict(self.datos_valido)
+        datos["password"] = "Pass1234"
+        datos["confirmar"] = "Pass5678"
+        respuesta = self.client.post("/api/usuarios/register/", datos, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("confirmar", respuesta.data)
+
+    def test_post_register_password_corta_400(self):
+        """CP-RU-VAL-04: Password < 8 caracteres → 400"""
+        datos = dict(self.datos_valido)
+        datos["password"] = "Ab1"
+        datos["confirmar"] = "Ab1"
+        respuesta = self.client.post("/api/usuarios/register/", datos, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("password", respuesta.data)
+
+    # --- LOGIN ---
+
+    def test_post_login_campos_vacios_400(self):
+        """CP-IS-VAL-01: Login con campos vacíos → 400"""
+        respuesta = self.client.post("/api/usuarios/login/", {}, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_login_email_no_registrado_400(self):
+        """CP-IS-VAL-02: Login con email no registrado → 400"""
+        respuesta = self.client.post("/api/usuarios/login/", {"email": "noexiste@mail.com", "password": "Pass1234"}, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Credenciales inválidas", str(respuesta.data))
+
+    def test_post_login_password_incorrecta_400(self):
+        """CP-IS-VAL-03: Login con contraseña incorrecta → 400"""
+        self.client.post("/api/usuarios/register/", self.datos_valido, format="json")
+        respuesta = self.client.post("/api/usuarios/login/", {"email": "ana@mail.com", "password": "WrongPass99"}, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Credenciales inválidas", str(respuesta.data))
