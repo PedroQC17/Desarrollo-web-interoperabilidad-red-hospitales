@@ -152,7 +152,8 @@ function Register() {
 
     } catch (err: any) {
       console.error(err);
-      setServerError("Error en el registro. Verifica los datos.");
+      const msg = err?.confirmar || err?.email || err?.password || err?.detail || "Error en el registro. Verifica los datos.";
+      setServerError(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setLoading(false);
     }
