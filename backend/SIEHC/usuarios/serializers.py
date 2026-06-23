@@ -36,7 +36,7 @@ class RegisterSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-        validated_data.pop('confirmar')
+        validated_data.pop('confirmar', None)
         return register_usuario(**validated_data)
 
 
