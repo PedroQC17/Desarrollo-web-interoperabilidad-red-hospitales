@@ -1,8 +1,23 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from usuarios.models import Usuario
+from usuarios.models import Usuario, Paciente, Medico, Administrador
 from services.gestion_usuarios.registro_usuarios import register_usuario, login_usuario
+
+
+class UsuarioModelTest(TestCase):
+    """Pruebas de modelo para verificar creación y persistencia en BD"""
+
+    def test_crear_usuario_y_verificar_en_bd(self):
+        Usuario.objects.create_user(email="juan@mail.com", password="Pass1234", nombre="Juan", telecom="987654321", genero="M", fec_nac="2000-01-01", tipo_usuario="paciente")
+        usuario_bd = Usuario.objects.get(email="juan@mail.com")
+        self.assertEqual(usuario_bd.email, "juan@mail.com")
+        self.assertEqual(usuario_bd.tipo_usuario, "paciente")
+
+    def test_crear_perfil_paciente_automatico(self):
+        user = Usuario.objects.create_user(email="ana@mail.com", password="Pass1234", nombre="Ana", telecom="987654322", genero="F", fec_nac="2002-03-10", tipo_usuario="paciente")
+        Paciente.objects.create(usuario=user)
+        self.assertTrue(Paciente.objects.filter(usuario=user).exists())
 
 
 class UsuarioServiceTest(TestCase):
