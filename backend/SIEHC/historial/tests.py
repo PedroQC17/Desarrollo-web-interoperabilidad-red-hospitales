@@ -6,7 +6,30 @@ from rest_framework import status
 from usuarios.models import Usuario, Paciente, Medico
 from hospitales.models import Hospital
 from citas.models import Cita
+from medicamentos.models import Medicamento
+from historial.models import Historial, Diagnostico, Receta
 from services.gestion_medicos.gestion_atencion import registrar_diagnostico
+
+
+class HistorialModelTest(TestCase):
+    """Pruebas de modelo para historial, diagnóstico y receta en BD"""
+
+    def setUp(self):
+        self.paciente = Paciente.objects.create(usuario=Usuario.objects.create_user(email="carmen@mail.com", password="Pass1234", nombre="Carmen", telecom="987654019", genero="F", fec_nac="1978-03-15", tipo_usuario="paciente"))
+        self.historial = Historial.objects.create(paciente=self.paciente)
+
+    def test_historial_activo_default_true(self):
+        self.assertTrue(self.historial.activo)
+
+    def test_crear_diagnostico_en_historial(self):
+        Diagnostico.objects.create(historial=self.historial, estado_clinico="Diabetes mellitus tipo 2", categoria="Endocrinología", severidad="moderado", ubicacion_anatomica="Páncreas", fecha_hora_inicio=timezone.now(), edad_inicio=45, descripcion_inicio="Glucemia elevada")
+        self.assertEqual(self.historial.diagnosticos.count(), 1)
+
+    def test_crear_receta_en_historial(self):
+        hospital = Hospital.objects.create(tipo="publico", nombre="Hospital Nacional", alias="HN", contacto="01-2658000", especialidad="Medicina General", ubicacion="Av. Central", periodo="Lun-Dom 24h", activo=True)
+        medicamento = Medicamento.objects.create(hospital=hospital, nombre="Metformina 850mg", funcion="Hipoglucemiante", tipo="otro", stock=200, costo=3.50)
+        Receta.objects.create(historial=self.historial, medicamento=medicamento, intencion="Control glucémico", categoria="libre", prioridad="media", instruccion_dosis="1 cada 12 horas", periodo_dosis="90 días", cantidad_suministrada=180)
+        self.assertEqual(self.historial.recetas.count(), 1)
 
 
 class DiagnosticoServiceTest(TestCase):
