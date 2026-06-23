@@ -5,7 +5,23 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from usuarios.models import Usuario, Paciente, Medico
 from hospitales.models import Hospital
+from citas.models import Cita
 from services.gestion_pacientes.gestion_citas import solicitar_cita
+
+
+class CitaModelTest(TestCase):
+    """Pruebas de modelo para verificar creación de citas en BD"""
+
+    def setUp(self):
+        self.paciente = Paciente.objects.create(usuario=Usuario.objects.create_user(email="laura@mail.com", password="Pass1234", nombre="Laura", telecom="987654001", genero="F", fec_nac="1995-07-12", tipo_usuario="paciente"))
+        hospital = Hospital.objects.create(tipo="publico", nombre="Hospital Central", alias="HC", contacto="01-3304000", especialidad="Cardiología", ubicacion="Av. Central 123", periodo="Lun-Vie 8am-8pm", activo=True)
+        self.medico = Medico.objects.create(usuario=Usuario.objects.create_user(email="carlos@mail.com", password="Pass1234", nombre="Dr. Carlos", telecom="987654003", genero="M", fec_nac="1975-03-20", tipo_usuario="medico"), hospital=hospital, periodo="Lun-Vie 9am-5pm", especialidad="Cardiología", ubicacion="Consultorio 305", servicio_sanitario="Cardiología", disponibilidad=True)
+
+    def test_crear_cita_con_estado_pendiente(self):
+        inicio = timezone.now() + timedelta(days=1)
+        cita = Cita.objects.create(medico=self.medico, paciente=self.paciente, tipo="presencial", especialidad="Cardiología", inicio=inicio, fin=inicio + timedelta(hours=1))
+        self.assertEqual(cita.estado, "pendiente")
+        self.assertEqual(cita.tipo, "presencial")
 
 
 class CitaServiceTest(TestCase):
