@@ -169,7 +169,7 @@ def citas_del_medico(medico: Medico, estado: str = None):
     HU08 — Lista de citas del médico ordenadas por hora de inicio.
     """
     qs = Cita.objects.filter(medico=medico).select_related(
-        "paciente__usuario"
+        "paciente__usuario", "medico__usuario", "medico__hospital"
     ).order_by("inicio")
 
     if estado:

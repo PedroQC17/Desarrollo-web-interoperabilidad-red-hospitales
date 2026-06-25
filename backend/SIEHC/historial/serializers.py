@@ -20,11 +20,15 @@ class DiagnosticoSerializer(serializers.ModelSerializer):
         model  = Diagnostico
         fields = '__all__'
 
-    # Sube por: historial → paciente → citas → medico
     # Busca la cita más reciente del paciente para este diagnóstico
+    # Cache a nivel de instancia para evitar repetir la misma query
     def _cita(self, obj):
-        citas = obj.historial.paciente.citas.order_by('-inicio')
-        return citas.first()
+        if not hasattr(self, '_cita_cache'):
+            self._cita_cache = {}
+        if obj.pk not in self._cita_cache:
+            citas = obj.historial.paciente.citas.all()
+            self._cita_cache[obj.pk] = citas[0] if citas else None
+        return self._cita_cache[obj.pk]
 
     def get_medico_nombre(self, obj):
         cita = self._cita(obj)
@@ -54,8 +58,12 @@ class RecetaSerializer(serializers.ModelSerializer):
 
     
     def _cita(self, obj):
-        citas = obj.historial.paciente.citas.order_by('-inicio')
-        return citas.first()
+        if not hasattr(self, '_cita_cache'):
+            self._cita_cache = {}
+        if obj.pk not in self._cita_cache:
+            citas = obj.historial.paciente.citas.all()
+            self._cita_cache[obj.pk] = citas[0] if citas else None
+        return self._cita_cache[obj.pk]
 
     def get_medicamento_nombre(self, obj):
         return obj.medicamento.nombre
