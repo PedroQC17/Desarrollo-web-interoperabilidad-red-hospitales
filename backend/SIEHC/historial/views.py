@@ -1,3 +1,5 @@
+from django.db import models
+
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework.decorators import action
@@ -7,6 +9,7 @@ from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from historial.models import Historial, Observacion, Examen, Receta, Diagnostico
+from citas.models import Cita
 from historial.serializers import (
     HistorialSerializer,
     HistorialDetalleSerializer,
@@ -301,6 +304,15 @@ class RecetaViewSet(ModelViewSet):
     queryset           = Receta.objects.all()
     serializer_class   = RecetaSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related("medicamento", "historial__paciente").prefetch_related(
+            models.Prefetch("historial__paciente__citas", queryset=Cita.objects.order_by("-inicio"))
+        )
+        user = self.request.user
+        if user.tipo_usuario == "medico":
+            qs = qs.filter(historial__paciente__citas__medico__usuario=user).distinct()
+        return qs
     
 
 
@@ -309,6 +321,15 @@ class DiagnosticoViewSet(ModelViewSet):
     queryset           = Diagnostico.objects.all()
     serializer_class   = DiagnosticoSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related("historial__paciente").prefetch_related(
+            models.Prefetch("historial__paciente__citas", queryset=Cita.objects.order_by("-inicio"))
+        )
+        user = self.request.user
+        if user.tipo_usuario == "medico":
+            qs = qs.filter(historial__paciente__citas__medico__usuario=user).distinct()
+        return qs
 
 
 #Funciones para la atencion medica
