@@ -114,12 +114,13 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-# ─── CORS (permite que React en localhost:5173 llame a Django) ────────────────
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8080',
-    'http://127.0.0.1:8080',
-    'http://192.168.18.9:8080',
-]
+# ─── CORS (lee de variable de entorno, fallback a localhost) ──────────────────
+_cors_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = (
+    [o.strip().rstrip('/') for o in _cors_env.split(',') if o.strip()]
+    if _cors_env
+    else ['http://localhost:8080', 'http://127.0.0.1:8080']
+)
 
 # ─── Validación de contraseñas ────────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
