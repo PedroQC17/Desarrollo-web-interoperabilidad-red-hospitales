@@ -7,6 +7,7 @@ from .views import (
     DespacharMedicamentosView,
     MisDespachoView,
     MisFacturasMedicamentosView,
+    ReporteVentasMedicamentosView,
 )
 
 router = DefaultRouter()
@@ -20,6 +21,9 @@ urlpatterns = [
     # ── HU12 — Despacho de medicamentos por cita ─────────────────────────────
     path("despachar/<int:cita_pk>/", DespacharMedicamentosView.as_view(), name="despachar-medicamentos"),
     path("medicamentos/despachar/<int:cita_pk>/", DespacharMedicamentosView.as_view(), name="despachar-medicamentos-alt"),
+
+    # ── HU17 — Reporte de ventas de medicamentos (admin) ───────────────────────
+    path("reporte-ventas/",                  ReporteVentasMedicamentosView.as_view(), name="reporte-ventas-medicamentos"),
 
     # ── HU12+ — Listar despachos del médico ────────────────────────────────────
     path("mis-despachos/",                 MisDespachoView.as_view(), name="mis-despachos"),

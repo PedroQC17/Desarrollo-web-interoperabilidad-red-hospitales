@@ -22,14 +22,21 @@ class UsuarioSerializer(serializers.ModelSerializer):
 # CLASES DE REGISTRO Y LOGIN
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirmar = serializers.CharField(write_only=True, required=False)
     nombre = serializers.CharField()
     telecom = serializers.CharField()
     genero = serializers.CharField()
     fec_nac = serializers.DateField()
     tipo_usuario = serializers.CharField()
 
+    def validate(self, data):
+        if data.get('confirmar') and data.get('password') != data.get('confirmar'):
+            raise serializers.ValidationError({"confirmar": "Las contraseñas no coinciden"})
+        return data
+
     def create(self, validated_data):
+        validated_data.pop('confirmar', None)
         return register_usuario(**validated_data)
 
 

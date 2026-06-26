@@ -113,7 +113,7 @@ const AdminUsuarios = () => {
       toast.error("Completa todos los campos obligatorios.");
       return;
     }
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre.trim())) {
+    if (!/^[\p{L}\s]+$/u.test(nombre.trim())) {
       toast.error("El nombre solo debe contener letras y espacios.");
       return;
     }

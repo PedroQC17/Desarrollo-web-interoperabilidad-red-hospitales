@@ -11,7 +11,7 @@ class Hospital(models.Model):
     ]
 
     tipo        = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    nombre      = models.CharField(max_length=200)
+    nombre      = models.CharField(max_length=200, unique=True)
     alias       = models.CharField(max_length=100, blank=True)
     descripcion = models.TextField(blank=True)
     contacto    = models.CharField(max_length=50)
@@ -20,6 +20,8 @@ class Hospital(models.Model):
     periodo     = models.CharField(max_length=100, help_text='Ej: Lun-Vie 8am-6pm')
     activo      = models.BooleanField(default=True)
     creado_en   = models.DateTimeField(auto_now_add=True)
+    fecha_desactivacion = models.DateTimeField(null=True, blank=True)
+    motivo_desactivacion = models.TextField(blank=True)
 
     class Meta:
         verbose_name = 'Hospital'

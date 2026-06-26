@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/authContext";
 import { useNavigate } from "react-router-dom";
 import "./Auth.css";
 import logo from "../../assets/logo-siehc.png";
+import { showGlobalLoader } from "@/lib/loader";
 
 // ── Tipos ─────────────────────────────────────────────────
 type FormFields = {
@@ -19,7 +20,7 @@ type FormFields = {
 type FormErrors = Partial<Record<keyof FormFields, string>>;
 
 // ── Constantes de validación ──────────────────────────────
-const SOLO_LETRAS     = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/;
+const SOLO_LETRAS     = /^[\p{L}\s]+$/u;
 const SOLO_NUMEROS    = /^[0-9]+$/;
 const EMAIL_VALIDO    = /^[^\s@]+@[^\s@]+\.com$/i;   // debe terminar en .com
 const AÑO_MIN        = 1950;
@@ -129,14 +130,6 @@ function Register() {
     }
   };
 
-  // Bloquea teclas no alfabéticas en nombre
-  const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"," "];
-    if (!permitidas.includes(e.key) && !/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]$/.test(e.key)) {
-      e.preventDefault();
-    }
-  };
-
   const handleRegister = async () => {
     const formErrors = validate(form);
     if (Object.keys(formErrors).length > 0) {
@@ -151,6 +144,7 @@ function Register() {
       await register(form);
       const user = await getProfile();
       setUser(user);
+      showGlobalLoader();
 
       if (user.tipo_usuario === "paciente")      navigate("/paciente");
       else if (user.tipo_usuario === "medico")   navigate("/medico");
@@ -158,7 +152,8 @@ function Register() {
 
     } catch (err: any) {
       console.error(err);
-      setServerError("Error en el registro. Verifica los datos.");
+      const msg = err?.confirmar || err?.email || err?.password || err?.detail || "Error en el registro. Verifica los datos.";
+      setServerError(typeof msg === "string" ? msg : JSON.stringify(msg));
     } finally {
       setLoading(false);
     }
@@ -206,10 +201,9 @@ function Register() {
               <label>Nombre completo</label>
               <input
                 name="nombre"
-                placeholder="Juan Pérez"
-                value={form.nombre}
-                onChange={handleChange}
-                onKeyDown={handleNombreKeyDown}
+                  placeholder="Juan Pérez"
+                  value={form.nombre}
+                  onChange={handleChange}
                 className={errors.nombre ? "input-error" : ""}
               />
               {errors.nombre && <span className="field-error">{errors.nombre}</span>}

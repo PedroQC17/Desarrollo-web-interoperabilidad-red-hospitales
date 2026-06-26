@@ -359,9 +359,16 @@ input[type="date"] {
   .auth-fields-grid {
     grid-template-columns: 1fr; /* 1 columna en móvil */
   }
- 
+  
   .auth-field-full {
     grid-column: auto;
   }
+}
+
+/* ── Errores de campo ───────────────────────────────────── */
+.field-error {
+  color: #dc2626;
+  font-size: 12px;
+  line-height: 1.3;
 }
  

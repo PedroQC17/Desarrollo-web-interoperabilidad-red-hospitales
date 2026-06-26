@@ -1,8 +1,14 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import PatientSidebar from "@/components/patient/PatientSidebar";
 import PatientMobileNav from "@/components/patient/PatientMobileNav";
+import { hideGlobalLoader } from "@/lib/loader";
 
 const PatientLayout = () => {
+  useEffect(() => {
+    const t = setTimeout(() => hideGlobalLoader(), 1000);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="flex min-h-screen bg-background">
       <PatientSidebar />
