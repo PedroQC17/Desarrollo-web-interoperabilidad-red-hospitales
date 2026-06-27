@@ -88,6 +88,11 @@ const FORM_INIT = {
   hora: "", tipo: "presencial", motivo: "", nota: "",
 };
 
+const todayStr = new Date().toISOString().split("T")[0];
+const maxDate = new Date();
+maxDate.setMonth(maxDate.getMonth() + 1);
+const maxFecha = maxDate.toISOString().split("T")[0];
+
 // ── Componente principal ────────────────────────────────────────────────────
 
 const PatientCitas = () => {
@@ -198,6 +203,23 @@ const PatientCitas = () => {
     }
     const inicio = new Date(`${form.fecha}T${form.hora}`);
     if (Number.isNaN(inicio.getTime())) { setFormError("La fecha o la hora no son válidas."); return; }
+
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    if (inicio < hoy) {
+      setFormError("La fecha no puede ser anterior a hoy.");
+      return;
+    }
+    const dentroUnMes = new Date(hoy);
+    dentroUnMes.setMonth(dentroUnMes.getMonth() + 1);
+    if (inicio > dentroUnMes) {
+      setFormError("La fecha no puede exceder 1 mes desde hoy.");
+      return;
+    }
+
+    if (form.motivo.trim().length < 10) {
+      setFormError("El motivo debe tener al menos 10 caracteres.");
+      return;
+    }
 
     const medicoObj = doctors.find((d) => String(d.id) === form.medico);
     const fin = new Date(inicio.getTime() + 30 * 60 * 1000);
@@ -335,7 +357,7 @@ const PatientCitas = () => {
               {/* Fecha y Hora */}
               <div className="grid gap-4 sm:grid-cols-2">
                 {[
-                  { id: "fecha", label: "Fecha", type: "date", min: new Date().toISOString().split("T")[0] },
+                  { id: "fecha", label: "Fecha", type: "date", min: todayStr, max: maxFecha },
                   { id: "hora",  label: "Hora",  type: "time" },
                 ].map(({ id, label, type, min }) => (
                   <div key={id} className="space-y-1.5">
@@ -363,7 +385,7 @@ const PatientCitas = () => {
               <div className="space-y-1.5">
                 <Label htmlFor="motivo">Motivo de consulta <span className="text-destructive">*</span></Label>
                 <Input id="motivo" placeholder="Ej: Dolor de cabeza frecuente, control anual…"
-                  value={form.motivo} onChange={(e) => setF("motivo", e.target.value)} disabled={formLoading} />
+                  value={form.motivo} onChange={(e) => setF("motivo", e.target.value)} disabled={formLoading} maxLength={100} />
               </div>
 
               {/* Notas */}
