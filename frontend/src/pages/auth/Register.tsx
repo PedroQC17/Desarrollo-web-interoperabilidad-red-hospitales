@@ -58,8 +58,12 @@ function validate(form: FormFields): FormErrors {
   /* Contraseña */
   if (!form.password) {
     err.password = "La contraseña es obligatoria.";
-  } else if (form.password.length < 8) {
-    err.password = "La contraseña debe tener al menos 8 caracteres.";
+  } else if (form.password.length < 15) {
+    err.password = "La contraseña debe tener al menos 15 caracteres.";
+  } else if (!/[a-zA-Z]/.test(form.password)) {
+    err.password = "La contraseña debe incluir al menos una letra.";
+  } else if (!/[0-9]/.test(form.password)) {
+    err.password = "La contraseña debe incluir al menos un número.";
   }
 
   /* Teléfono */
@@ -238,7 +242,7 @@ function Register() {
               <input
                 name="password"
                 type="password"
-                placeholder="Mínimo 8 caracteres"
+                placeholder="Mínimo 15 caracteres, incluye letras y números"
                 value={form.password}
                 onChange={handleChange}
                 className={errors.password ? "input-error" : ""}
