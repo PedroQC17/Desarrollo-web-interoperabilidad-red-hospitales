@@ -58,8 +58,8 @@ function validate(form: FormFields): FormErrors {
   /* Contraseña */
   if (!form.password) {
     err.password = "La contraseña es obligatoria.";
-  } else if (form.password.length < 15) {
-    err.password = "La contraseña debe tener al menos 15 caracteres.";
+  } else if (form.password.length < 8) {
+    err.password = "La contraseña debe tener al menos 8 caracteres.";
   } else if (!/[a-zA-Z]/.test(form.password)) {
     err.password = "La contraseña debe incluir al menos una letra.";
   } else if (!/[0-9]/.test(form.password)) {
@@ -71,6 +71,8 @@ function validate(form: FormFields): FormErrors {
     err.telecom = "El teléfono es obligatorio.";
   } else if (!SOLO_NUMEROS.test(form.telecom.trim())) {
     err.telecom = "El teléfono solo debe contener números.";
+  } else if (!form.telecom.trim().startsWith("9")) {
+    err.telecom = "El teléfono debe empezar con 9.";
   } else if (form.telecom.trim().length !== 9) {
     err.telecom = "El teléfono debe tener exactamente 9 dígitos.";
   }
@@ -126,10 +128,14 @@ function Register() {
     }
   };
 
-  // Bloquea teclas no numéricas en el teléfono
+  // Bloquea teclas no numéricas en el teléfono y obliga a empezar con 9
   const handleTelecomKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
     if (!permitidas.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    if (/^[0-9]$/.test(e.key) && e.currentTarget.selectionStart === 0 && e.key !== "9") {
       e.preventDefault();
     }
   };
@@ -242,7 +248,7 @@ function Register() {
               <input
                 name="password"
                 type="password"
-                placeholder="Mínimo 15 caracteres, incluye letras y números"
+                placeholder="Mínimo 8 caracteres, incluye letras y números"
                 value={form.password}
                 onChange={handleChange}
                 maxLength={15}
