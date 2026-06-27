@@ -130,6 +130,14 @@ function Register() {
     }
   };
 
+  // Bloquea teclas que no sean letras Unicode en el nombre
+  const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if (!permitidas.includes(e.key) && !/^\p{L}$/u.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const handleRegister = async () => {
     const formErrors = validate(form);
     if (Object.keys(formErrors).length > 0) {
@@ -204,6 +212,7 @@ function Register() {
                   placeholder="Juan Pérez"
                   value={form.nombre}
                   onChange={handleChange}
+                  onKeyDown={handleNombreKeyDown}
                 className={errors.nombre ? "input-error" : ""}
               />
               {errors.nombre && <span className="field-error">{errors.nombre}</span>}
