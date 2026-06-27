@@ -245,6 +245,7 @@ function Register() {
                 placeholder="Mínimo 15 caracteres, incluye letras y números"
                 value={form.password}
                 onChange={handleChange}
+                maxLength={15}
                 className={errors.password ? "input-error" : ""}
               />
               {errors.password && <span className="field-error">{errors.password}</span>}
