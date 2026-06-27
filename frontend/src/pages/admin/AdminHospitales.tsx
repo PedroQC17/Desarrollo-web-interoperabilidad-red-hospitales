@@ -92,6 +92,14 @@ const AdminHospitales = () => {
     }
   };
 
+  // Bloquea teclas no numéricas en el contacto
+  const handleContactoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if (!permitidas.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   // ── Crear ─────────────────────────────────────────────────────────────────
   const crearHospital = async () => {
     const { nombre, contacto, especialidad, ubicacion, periodo, tipo } = form;
@@ -101,6 +109,14 @@ const AdminHospitales = () => {
     }
     if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) {
       toast.error("El nombre solo debe contener letras, espacios y números.");
+      return;
+    }
+    if (!/^[0-9]{7,9}$/.test(contacto.trim())) {
+      toast.error("El contacto debe contener solo dígitos (7-9 caracteres).");
+      return;
+    }
+    if (!ubicacion.trim() || ubicacion.trim().length < 5) {
+      toast.error("La ubicación debe tener al menos 5 caracteres.");
       return;
     }
     setFormLoading(true);
@@ -146,6 +162,14 @@ const AdminHospitales = () => {
     }
     if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) {
       toast.error("El nombre solo debe contener letras, espacios y números.");
+      return;
+    }
+    if (!/^[0-9]{7,9}$/.test(contacto.trim())) {
+      toast.error("El contacto debe contener solo dígitos (7-9 caracteres).");
+      return;
+    }
+    if (!ubicacion.trim() || ubicacion.trim().length < 5) {
+      toast.error("La ubicación debe tener al menos 5 caracteres.");
       return;
     }
     setFormLoading(true);
@@ -233,7 +257,7 @@ const AdminHospitales = () => {
         </div>
         <div className="space-y-1">
           <Label>Contacto <span className="text-destructive">*</span></Label>
-          <Input name="contacto" placeholder="+51 1 234-5678" value={form.contacto} onChange={handleChange} />
+          <Input name="contacto" placeholder="999999999" value={form.contacto} onChange={handleChange} onKeyDown={handleContactoKeyDown} maxLength={9} inputMode="numeric" />
         </div>
       </div>
 
