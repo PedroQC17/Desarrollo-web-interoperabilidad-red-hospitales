@@ -43,7 +43,7 @@ const AdminUsuarios = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [form, setForm] = useState<NuevoUsuario>({
     nombre: "", email: "", password: "", telecom: "",
-    genero: "", fec_nac: "", tipo_usuario: "paciente",
+    genero: "", fec_nac: "", tipo_usuario: "",
   });
 
   // ── Cargar usuarios del backend ──────────────────────────────────────────
@@ -129,7 +129,7 @@ const AdminUsuarios = () => {
   // ── Crear usuario ─────────────────────────────────────────────────────────
   const crearUsuario = async () => {
     const { nombre, email, password, telecom, genero, fec_nac } = form;
-    if (!nombre.trim() || !email.trim() || !password.trim() || !telecom.trim() || !genero || !fec_nac) {
+    if (!nombre.trim() || !email.trim() || !password.trim() || !telecom.trim() || !genero || !fec_nac || !form.tipo_usuario) {
       toast.error("Completa todos los campos obligatorios.");
       return;
     }
@@ -183,7 +183,7 @@ const AdminUsuarios = () => {
       }, true);
       toast.success("Usuario creado correctamente");
       setShowForm(false);
-      setForm({ nombre: "", email: "", password: "", telecom: "", genero: "", fec_nac: "", tipo_usuario: "paciente" });
+      setForm({ nombre: "", email: "", password: "", telecom: "", genero: "", fec_nac: "", tipo_usuario: "" });
       cargarUsuarios();
     } catch {
       toast.error("Error al crear usuario");
@@ -352,6 +352,7 @@ const AdminUsuarios = () => {
                   value={form.tipo_usuario}
                   onChange={(e) => setForm({ ...form, tipo_usuario: e.target.value as any })}
                 >
+                  <option value="">Seleccionar...</option>
                   <option value="paciente">Paciente</option>
                   <option value="medico">Médico</option>
                   <option value="admin">Administrador</option>
