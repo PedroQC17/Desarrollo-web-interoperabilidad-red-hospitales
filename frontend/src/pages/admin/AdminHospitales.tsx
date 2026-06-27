@@ -127,8 +127,8 @@ const AdminHospitales = () => {
       toast.error("La ubicación debe tener al menos 5 caracteres.");
       return;
     }
-    if (form.descripcion.trim().length < 100) {
-      toast.error("La descripción debe tener al menos 100 caracteres.");
+    if (form.descripcion.trim().length < 10) {
+      toast.error("La descripción debe tener al menos 10 caracteres.");
       return;
     }
     setFormLoading(true);
@@ -188,8 +188,8 @@ const AdminHospitales = () => {
       toast.error("La ubicación debe tener al menos 5 caracteres.");
       return;
     }
-    if (form.descripcion.trim().length < 100) {
-      toast.error("La descripción debe tener al menos 100 caracteres.");
+    if (form.descripcion.trim().length < 10) {
+      toast.error("La descripción debe tener al menos 10 caracteres.");
       return;
     }
     setFormLoading(true);
@@ -304,6 +304,7 @@ const AdminHospitales = () => {
           value={form.descripcion}
           onChange={handleChange}
           rows={3}
+          maxLength={100}
           className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background resize-none"
         />
       </div>
