@@ -157,6 +157,10 @@ const AdminUsuarios = () => {
       toast.error("La contraseña debe incluir al menos un número.");
       return;
     }
+    if (!/^[0-9]/.test(telecom.trim()) || !telecom.trim().startsWith("9")) {
+      toast.error("El teléfono debe empezar con 9.");
+      return;
+    }
     if (!/^[0-9]{9}$/.test(telecom.trim())) {
       toast.error("El teléfono debe tener exactamente 9 dígitos numéricos.");
       return;
@@ -318,8 +322,11 @@ const AdminUsuarios = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Teléfono</label>
-                <Input placeholder="+51 999 999 999" value={form.telecom}
-                  onChange={(e) => setForm({ ...form, telecom: e.target.value })} />
+                <Input placeholder="999999999" value={form.telecom}
+                  onChange={(e) => setForm({ ...form, telecom: e.target.value })}
+                  onKeyDown={handleTelecomKeyDown}
+                  maxLength={9}
+                  inputMode="numeric" />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Fecha de nacimiento</label>
