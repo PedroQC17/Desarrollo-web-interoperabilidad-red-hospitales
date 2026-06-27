@@ -343,7 +343,6 @@ const AdminUsuarios = () => {
                   <option value="">Seleccionar...</option>
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
-                  <option value="O">Otro</option>
                 </select>
               </div>
               <div className="space-y-1 md:col-span-2">
