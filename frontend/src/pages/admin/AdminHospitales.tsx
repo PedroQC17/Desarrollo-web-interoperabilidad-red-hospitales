@@ -89,6 +89,10 @@ const AdminHospitales = () => {
     const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
     if (!permitidas.includes(e.key) && !/^[\p{L}\s0-9]$/u.test(e.key)) {
       e.preventDefault();
+      return;
+    }
+    if (e.key === " " && e.currentTarget.selectionStart === 0) {
+      e.preventDefault();
     }
   };
 
@@ -111,12 +115,20 @@ const AdminHospitales = () => {
       toast.error("El nombre solo debe contener letras, espacios y números.");
       return;
     }
+    if (nombre.trim().startsWith(" ")) {
+      toast.error("El nombre no puede empezar con espacio.");
+      return;
+    }
     if (!/^[0-9]{7,9}$/.test(contacto.trim())) {
       toast.error("El contacto debe contener solo dígitos (7-9 caracteres).");
       return;
     }
     if (!ubicacion.trim() || ubicacion.trim().length < 5) {
       toast.error("La ubicación debe tener al menos 5 caracteres.");
+      return;
+    }
+    if (form.descripcion.trim().length < 100) {
+      toast.error("La descripción debe tener al menos 100 caracteres.");
       return;
     }
     setFormLoading(true);
@@ -164,12 +176,20 @@ const AdminHospitales = () => {
       toast.error("El nombre solo debe contener letras, espacios y números.");
       return;
     }
+    if (nombre.trim().startsWith(" ")) {
+      toast.error("El nombre no puede empezar con espacio.");
+      return;
+    }
     if (!/^[0-9]{7,9}$/.test(contacto.trim())) {
       toast.error("El contacto debe contener solo dígitos (7-9 caracteres).");
       return;
     }
     if (!ubicacion.trim() || ubicacion.trim().length < 5) {
       toast.error("La ubicación debe tener al menos 5 caracteres.");
+      return;
+    }
+    if (form.descripcion.trim().length < 100) {
+      toast.error("La descripción debe tener al menos 100 caracteres.");
       return;
     }
     setFormLoading(true);
