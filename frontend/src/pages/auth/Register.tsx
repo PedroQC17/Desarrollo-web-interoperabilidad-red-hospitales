@@ -96,6 +96,11 @@ function validate(form: FormFields): FormErrors {
     err.genero = "Selecciona un género.";
   }
 
+  /* Tipo de usuario */
+  if (!form.tipo_usuario) {
+    err.tipo_usuario = "Selecciona un tipo de usuario.";
+  }
+
   return err;
 }
 
@@ -114,7 +119,7 @@ function Register() {
     telecom: "",
     genero: "",
     fec_nac: "",
-    tipo_usuario: "paciente",
+    tipo_usuario: "",
   });
 
   // Limpia el error del campo al escribir
@@ -311,12 +316,14 @@ function Register() {
                 name="tipo_usuario"
                 onChange={handleChange}
                 value={form.tipo_usuario}
-                className="auth-select"
+                className={`auth-select${errors.tipo_usuario ? " input-error" : ""}`}
               >
+                <option value="">Seleccionar...</option>
                 <option value="paciente">Paciente</option>
                 <option value="medico">Médico</option>
                 <option value="admin">Administrador</option>
               </select>
+              {errors.tipo_usuario && <span className="field-error">{errors.tipo_usuario}</span>}
             </div>
 
           </div>
