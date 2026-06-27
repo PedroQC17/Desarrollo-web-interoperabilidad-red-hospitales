@@ -106,6 +106,26 @@ const AdminUsuarios = () => {
     }
   };
 
+  // Bloquea teclas que no sean letras Unicode en el nombre
+  const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if (!permitidas.includes(e.key) && !/^\p{L}$/u.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  // Bloquea teclas no numéricas en el teléfono
+  const handleTelecomKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if (!permitidas.includes(e.key) && !/^[0-9]$/.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    if (/^[0-9]$/.test(e.key) && e.currentTarget.selectionStart === 0 && e.key !== "9") {
+      e.preventDefault();
+    }
+  };
+
   // ── Crear usuario ─────────────────────────────────────────────────────────
   const crearUsuario = async () => {
     const { nombre, email, password, telecom, genero, fec_nac } = form;
@@ -274,7 +294,8 @@ const AdminUsuarios = () => {
               <div className="space-y-1">
                 <label className="text-sm font-medium">Nombre completo</label>
                 <Input placeholder="Juan Pérez" value={form.nombre}
-                  onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
+                  onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                  onKeyDown={handleNombreKeyDown} />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Correo electrónico</label>
