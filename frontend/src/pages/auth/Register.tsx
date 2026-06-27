@@ -300,7 +300,6 @@ function Register() {
                 <option value="">Seleccionar...</option>
                 <option value="M">Masculino</option>
                 <option value="F">Femenino</option>
-                <option value="O">Otro</option>
               </select>
               {errors.genero && <span className="field-error">{errors.genero}</span>}
             </div>
