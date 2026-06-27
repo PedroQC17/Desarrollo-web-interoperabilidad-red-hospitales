@@ -84,11 +84,23 @@ const AdminHospitales = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  // Bloquea caracteres especiales en el nombre del hospital
+  const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
+    if (!permitidas.includes(e.key) && !/^[\p{L}\s0-9]$/u.test(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   // ── Crear ─────────────────────────────────────────────────────────────────
   const crearHospital = async () => {
     const { nombre, contacto, especialidad, ubicacion, periodo, tipo } = form;
     if (!nombre || !contacto || !especialidad || !ubicacion || !periodo || !tipo) {
       toast.error("Completa los campos obligatorios");
+      return;
+    }
+    if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) {
+      toast.error("El nombre solo debe contener letras, espacios y números.");
       return;
     }
     setFormLoading(true);
@@ -130,6 +142,10 @@ const AdminHospitales = () => {
     const { nombre, contacto, especialidad, ubicacion, periodo } = form;
     if (!nombre || !contacto || !especialidad || !ubicacion || !periodo) {
       toast.error("Completa los campos obligatorios");
+      return;
+    }
+    if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) {
+      toast.error("El nombre solo debe contener letras, espacios y números.");
       return;
     }
     setFormLoading(true);
@@ -206,7 +222,7 @@ const AdminHospitales = () => {
         </div>
         <div className="space-y-1">
           <Label>Nombre <span className="text-destructive">*</span></Label>
-          <Input name="nombre" placeholder="Hospital Nacional..." value={form.nombre} onChange={handleChange} />
+          <Input name="nombre" placeholder="Hospital Nacional..." value={form.nombre} onChange={handleChange} onKeyDown={handleNombreKeyDown} />
         </div>
       </div>
 
