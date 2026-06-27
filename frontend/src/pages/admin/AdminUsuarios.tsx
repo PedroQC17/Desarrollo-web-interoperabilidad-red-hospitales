@@ -149,6 +149,14 @@ const AdminUsuarios = () => {
       toast.error("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
+    if (!/[a-zA-Z]/.test(password)) {
+      toast.error("La contraseña debe incluir al menos una letra.");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      toast.error("La contraseña debe incluir al menos un número.");
+      return;
+    }
     if (!/^[0-9]{9}$/.test(telecom.trim())) {
       toast.error("El teléfono debe tener exactamente 9 dígitos numéricos.");
       return;
@@ -304,8 +312,9 @@ const AdminUsuarios = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Contraseña</label>
-                <Input type="password" placeholder="••••••••" value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                <Input type="password" placeholder="Mín 8, máx 15, incluye letras y números" value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  maxLength={15} />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Teléfono</label>
