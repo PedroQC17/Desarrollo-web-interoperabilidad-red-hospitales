@@ -148,7 +148,7 @@ function Register() {
   // Bloquea teclas que no sean letras Unicode en el nombre
   const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
-    if (!permitidas.includes(e.key) && !/^\p{L}$/u.test(e.key)) {
+    if (!permitidas.includes(e.key) && !/^[\p{L}\s]$/u.test(e.key)) {
       e.preventDefault();
     }
   };
