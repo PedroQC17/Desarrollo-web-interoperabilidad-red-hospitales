@@ -50,7 +50,7 @@ export const api = async (
       navigateTo("/login");
       throw new Error("Sesión expirada. Por favor inicia sesión de nuevo.");
     }
-
+    
     // Reintentar la petición original con el nuevo token
     const retryHeaders = {
       ...headers,
