@@ -1,6 +1,8 @@
 from django.test import TestCase
+from django.db import IntegrityError
 from rest_framework.test import APIClient
 from rest_framework import status
+from datetime import date
 from usuarios.models import Usuario, Paciente, Medico, Administrador
 from services.gestion_usuarios.registro_usuarios import register_usuario, login_usuario
 
@@ -18,6 +20,27 @@ class UsuarioModelTest(TestCase):
         user = Usuario.objects.create_user(email="ana@mail.com", password="Pass1234", nombre="Ana", telecom="987654322", genero="F", fec_nac="2002-03-10", tipo_usuario="paciente")
         Paciente.objects.create(usuario=user)
         self.assertTrue(Paciente.objects.filter(usuario=user).exists())
+
+    def test_password_no_almacenada_texto_plano(self):
+        user = Usuario.objects.create_user(
+            email="carmen.ramos@hospital.com", password="Segura789!",
+            nombre="Carmen Ramos", telecom="987654321", genero="F",
+            fec_nac=date(1992, 7, 10), tipo_usuario="paciente",
+        )
+        self.assertNotEqual(user.password, "Segura789!")
+
+    def test_email_unico_en_bd(self):
+        Usuario.objects.create_user(
+            email="pedro.silva@hospital.com", password="Pass1234!",
+            nombre="Pedro Silva", telecom="987654322", genero="M",
+            fec_nac=date(1988, 3, 22), tipo_usuario="medico",
+        )
+        with self.assertRaises(IntegrityError):
+            Usuario.objects.create_user(
+                email="pedro.silva@hospital.com", password="OtraPass1!",
+                nombre="Pedro Silva", telecom="987654322", genero="M",
+                fec_nac=date(1988, 3, 22), tipo_usuario="medico",
+            )
 
 
 class UsuarioServiceTest(TestCase):
