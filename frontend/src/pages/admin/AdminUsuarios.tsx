@@ -109,7 +109,7 @@ const AdminUsuarios = () => {
   // Bloquea teclas que no sean letras Unicode en el nombre
   const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
-    if (!permitidas.includes(e.key) && !/^\p{L}$/u.test(e.key)) {
+    if (!permitidas.includes(e.key) && !/^[\p{L}\s]$/u.test(e.key)) {
       e.preventDefault();
     }
   };
@@ -331,7 +331,9 @@ const AdminUsuarios = () => {
               <div className="space-y-1">
                 <label className="text-sm font-medium">Fecha de nacimiento</label>
                 <Input type="date" value={form.fec_nac}
-                  onChange={(e) => setForm({ ...form, fec_nac: e.target.value })} />
+                  onChange={(e) => setForm({ ...form, fec_nac: e.target.value })}
+                  min="1950-01-01"
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split("T")[0]} />
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Género</label>
