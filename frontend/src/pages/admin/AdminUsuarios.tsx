@@ -106,10 +106,14 @@ const AdminUsuarios = () => {
     }
   };
 
-  // Bloquea teclas que no sean letras Unicode en el nombre
+  // Bloquea teclas que no sean letras Unicode; espacio solo después de escribir algo
   const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const permitidas = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab"];
     if (!permitidas.includes(e.key) && !/^[\p{L}\s]$/u.test(e.key)) {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === " " && e.currentTarget.selectionStart === 0) {
       e.preventDefault();
     }
   };
