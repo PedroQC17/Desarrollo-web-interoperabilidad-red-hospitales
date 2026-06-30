@@ -24,6 +24,9 @@ const PatientFacturacion = () => {
   const [facturas, setFacturas] = useState<Factura[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterType, setFilterType] = useState("todos");
+  const [filtroDesde, setFiltroDesde] = useState("");
+  const [filtroHasta, setFiltroHasta] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const fetchFacturas = async () => {
@@ -105,8 +108,21 @@ const PatientFacturacion = () => {
   };
 
   const filtered = facturas.filter((f) => {
-    if (filterType === "consulta") return f.tipo === "consulta";
-    if (filterType === "medicamento") return f.tipo === "medicamento";
+    if (filterType === "consulta" && f.tipo !== "consulta") return false;
+    if (filterType === "medicamento" && f.tipo !== "medicamento") return false;
+    if (busqueda) {
+      const q = busqueda.toLowerCase();
+      const match = f.descripcion.toLowerCase().includes(q)
+        || (f.hospital?.toLowerCase().includes(q))
+        || `#${f.id}`.includes(q);
+      if (!match) return false;
+    }
+    if (filtroDesde && f.fecha_emitida && f.fecha_emitida < filtroDesde) return false;
+    if (filtroHasta) {
+      const hastaFin = new Date(filtroHasta);
+      hastaFin.setDate(hastaFin.getDate() + 1);
+      if (f.fecha_emitida && f.fecha_emitida >= hastaFin.toISOString().slice(0, 10)) return false;
+    }
     return true;
   });
 
@@ -124,12 +140,18 @@ const PatientFacturacion = () => {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <Input type="text" placeholder="Buscar factura..." className="max-w-md" />
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+        <div className="flex-1 min-w-[180px]">
+          <Input type="text" placeholder="Buscar factura..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+        </div>
+        <div className="w-[160px]">
+          <Input type="date" value={filtroDesde} onChange={(e) => setFiltroDesde(e.target.value)} />
+        </div>
+        <div className="w-[160px]">
+          <Input type="date" value={filtroHasta} onChange={(e) => setFiltroHasta(e.target.value)} />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Tipo" />
           </SelectTrigger>
           <SelectContent>
