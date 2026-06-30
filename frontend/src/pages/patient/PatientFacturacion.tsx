@@ -89,7 +89,10 @@ const PatientFacturacion = () => {
   const descargarPDF = async (id: number, tipo: string) => {
     try {
       const token = localStorage.getItem("access");
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/facturacion/${id}/pdf/`, {
+      const endpoint = tipo === "medicamento"
+        ? `/medicamentos/despacho/${id}/pdf/`
+        : `/facturacion/${id}/pdf/`;
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}${endpoint}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) { toast.error("Error al descargar la factura"); return; }

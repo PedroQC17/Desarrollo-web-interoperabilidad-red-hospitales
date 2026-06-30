@@ -8,6 +8,7 @@ from .views import (
     MisDespachoView,
     MisFacturasMedicamentosView,
     ReporteVentasMedicamentosView,
+    DespachoPDFView,
 )
 
 router = DefaultRouter()
@@ -30,6 +31,9 @@ urlpatterns = [
 
     # ── Paciente — Listar facturas de medicamentos ─────────────────────────────
     path("mis-facturas-medicamentos/",     MisFacturasMedicamentosView.as_view(), name="mis-facturas-medicamentos"),
+
+    # ── HU20 — PDF de despacho de medicamentos ──────────────────────────────────
+    path("despacho/<int:pk>/pdf/",         DespachoPDFView.as_view(),            name="despacho-pdf"),
 
     # ── CRUD admin (router existente) ─────────────────────────────────────────
     path("", include(router.urls)),
