@@ -10,6 +10,8 @@ class Historial(models.Model):
     )
     fecha_creacion = models.DateField(auto_now_add=True)
     activo         = models.BooleanField(default=True) #consentimiento
+    compartir_red  = models.BooleanField(default=False) #compartir con red hospitalaria
+    investigacion  = models.BooleanField(default=False) #uso anónimo para investigación
 
     class Meta:
         verbose_name = 'Historial médico'

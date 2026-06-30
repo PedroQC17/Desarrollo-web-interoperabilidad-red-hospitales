@@ -216,7 +216,14 @@ class ConsentimientoView(APIView):
 
         historial, _ = obtener_o_crear_historial(paciente)
         historial.activo = bool(aceptado)
-        historial.save(update_fields=["activo"])
+        update = ["activo"]
+        if "compartir_red" in request.data:
+            historial.compartir_red = bool(request.data["compartir_red"])
+            update.append("compartir_red")
+        if "investigacion" in request.data:
+            historial.investigacion = bool(request.data["investigacion"])
+            update.append("investigacion")
+        historial.save(update_fields=update)
 
         return Response(
             {
@@ -226,6 +233,8 @@ class ConsentimientoView(APIView):
                 ),
                 "historial_id": historial.id,
                 "consentimiento_activo": historial.activo,
+                "compartir_red": historial.compartir_red,
+                "investigacion": historial.investigacion,
             }
         )
 
