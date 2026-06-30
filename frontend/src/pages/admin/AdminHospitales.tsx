@@ -62,6 +62,7 @@ const AdminHospitales = () => {
   const [form, setForm]                     = useState<FormHospital>(emptyForm);
   const [formLoading, setFormLoading]       = useState(false);
   const [loadingIds, setLoadingIds]         = useState<number[]>([]);
+  const [errores, setErrores]               = useState<Record<string, string>>({});
 
   // Diálogo de desafiliación
   const [hospitalDesafiliar, setHospitalDesafiliar] = useState<Hospital | null>(null);
@@ -82,7 +83,36 @@ const AdminHospitales = () => {
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => setForm({ ...form, [e.target.name]: e.target.value });
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    if (errores[e.target.name]) {
+      setErrores((prev) => ({ ...prev, [e.target.name]: "" }));
+    }
+  };
+
+  const limpiarErrores = () => setErrores({});
+
+  function validarForm(): boolean {
+    const err: Record<string, string> = {};
+    const { nombre, contacto, especialidad, ubicacion, periodo, descripcion } = form;
+
+    if (!nombre?.trim()) err.nombre = "El nombre es obligatorio.";
+    else if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) err.nombre = "Solo letras, espacios y números.";
+    else if (nombre.trim().startsWith(" ")) err.nombre = "No puede empezar con espacio.";
+
+    if (!contacto?.trim()) err.contacto = "El contacto es obligatorio.";
+    else if (!/^[0-9]{7,9}$/.test(contacto.trim())) err.contacto = "Debe tener 7-9 dígitos.";
+
+    if (!ubicacion?.trim()) err.ubicacion = "La ubicación es obligatoria.";
+    else if (ubicacion.trim().length < 5) err.ubicacion = "Mínimo 5 caracteres.";
+
+    if (!especialidad?.trim()) err.especialidad = "La especialidad es obligatoria.";
+    if (!periodo?.trim()) err.periodo = "El horario es obligatorio.";
+    if (descripcion?.trim() && descripcion.trim().length < 10) err.descripcion = "Mínimo 10 caracteres.";
+
+    setErrores(err);
+    return Object.keys(err).length === 0;
+  }
 
   // Bloquea caracteres especiales en el nombre del hospital
   const handleNombreKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -106,31 +136,7 @@ const AdminHospitales = () => {
 
   // ── Crear ─────────────────────────────────────────────────────────────────
   const crearHospital = async () => {
-    const { nombre, contacto, especialidad, ubicacion, periodo, tipo } = form;
-    if (!nombre || !contacto || !especialidad || !ubicacion || !periodo || !tipo) {
-      toast.error("Completa los campos obligatorios");
-      return;
-    }
-    if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) {
-      toast.error("El nombre solo debe contener letras, espacios y números.");
-      return;
-    }
-    if (nombre.trim().startsWith(" ")) {
-      toast.error("El nombre no puede empezar con espacio.");
-      return;
-    }
-    if (!/^[0-9]{7,9}$/.test(contacto.trim())) {
-      toast.error("El contacto debe contener solo dígitos (7-9 caracteres).");
-      return;
-    }
-    if (!ubicacion.trim() || ubicacion.trim().length < 5) {
-      toast.error("La ubicación debe tener al menos 5 caracteres.");
-      return;
-    }
-    if (form.descripcion.trim().length < 10) {
-      toast.error("La descripción debe tener al menos 10 caracteres.");
-      return;
-    }
+    if (!validarForm()) return;
     setFormLoading(true);
     try {
       await api("/hospitales/hospitales/", {
@@ -152,6 +158,7 @@ const AdminHospitales = () => {
   // ── Editar ────────────────────────────────────────────────────────────────
   const abrirEditar = (h: Hospital) => {
     setHospitalEditar(h);
+    limpiarErrores();
     setForm({
       tipo:        h.tipo,
       nombre:      h.nombre,
@@ -167,31 +174,7 @@ const AdminHospitales = () => {
 
   const guardarEdicion = async () => {
     if (!hospitalEditar) return;
-    const { nombre, contacto, especialidad, ubicacion, periodo } = form;
-    if (!nombre || !contacto || !especialidad || !ubicacion || !periodo) {
-      toast.error("Completa los campos obligatorios");
-      return;
-    }
-    if (!/^[\p{L}\s0-9]+$/u.test(nombre.trim())) {
-      toast.error("El nombre solo debe contener letras, espacios y números.");
-      return;
-    }
-    if (nombre.trim().startsWith(" ")) {
-      toast.error("El nombre no puede empezar con espacio.");
-      return;
-    }
-    if (!/^[0-9]{7,9}$/.test(contacto.trim())) {
-      toast.error("El contacto debe contener solo dígitos (7-9 caracteres).");
-      return;
-    }
-    if (!ubicacion.trim() || ubicacion.trim().length < 5) {
-      toast.error("La ubicación debe tener al menos 5 caracteres.");
-      return;
-    }
-    if (form.descripcion.trim().length < 10) {
-      toast.error("La descripción debe tener al menos 10 caracteres.");
-      return;
-    }
+    if (!validarForm()) return;
     setFormLoading(true);
     try {
       await api(`/hospitales/hospitales/${hospitalEditar.id}/`, {
