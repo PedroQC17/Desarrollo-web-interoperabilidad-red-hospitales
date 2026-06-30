@@ -1,3 +1,6 @@
+from io import BytesIO
+from django.http import HttpResponse
+from fpdf import FPDF
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -143,6 +146,76 @@ class MisDespachoView(APIView):
         page      = paginator.paginate_queryset(despachos, request)
         serializer = DespachoSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  HU20 — PDF de despacho de medicamentos
+#  GET /api/medicamentos/despacho/<pk>/pdf/
+# ─────────────────────────────────────────────────────────────────────────────
+
+class DespachoPDFView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            despacho = Despacho.objects.prefetch_related('items__medicamento').select_related(
+                'cita__paciente__usuario', 'medico__usuario', 'medico__hospital'
+            ).get(pk=pk)
+        except Despacho.DoesNotExist:
+            return Response({"error": "Despacho no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+        cita = despacho.cita
+        hospital = despacho.medico.hospital.nombre if despacho.medico and despacho.medico.hospital else "—"
+        medico_nombre = despacho.medico.usuario.nombre if despacho.medico else "—"
+        paciente_nombre = cita.paciente.usuario.nombre if cita and cita.paciente else "—"
+
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('Helvetica', 'B', 18)
+        pdf.cell(0, 12, 'SIEHC - Factura de Medicamentos', new_x='LMARGIN', new_y='NEXT', align='C')
+        pdf.ln(6)
+
+        pdf.set_font('Helvetica', '', 10)
+        items = [
+            ('Despacho N.', f'#DES-{despacho.id}'),
+            ('Hospital', hospital),
+            ('Paciente', paciente_nombre),
+            ('Medico', medico_nombre),
+            ('Fecha', despacho.fecha_despacho.strftime('%d/%m/%Y %H:%M')),
+        ]
+        for label, value in items:
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.cell(35, 7, label + ':', border=1)
+            pdf.set_font('Helvetica', '', 10)
+            pdf.cell(0, 7, str(value), border=1, new_x='LMARGIN', new_y='NEXT')
+
+        pdf.ln(6)
+        col_w = [10, 80, 30, 30, 40]
+        headers = ['N.', 'Medicamento', 'Cant.', 'P.Unit.', 'Subtotal']
+        pdf.set_font('Helvetica', 'B', 10)
+        pdf.set_fill_color(230, 230, 230)
+        for i, h in enumerate(headers):
+            pdf.cell(col_w[i], 8, h, border=1, align='C', fill=True)
+        pdf.ln()
+
+        pdf.set_font('Helvetica', '', 10)
+        for idx, item in enumerate(despacho.items.all(), 1):
+            pdf.cell(col_w[0], 7, str(idx), border=1, align='C')
+            pdf.cell(col_w[1], 7, item.medicamento.nombre, border=1)
+            pdf.cell(col_w[2], 7, str(item.cantidad), border=1, align='C')
+            pdf.cell(col_w[3], 7, f'S/ {float(item.precio_unitario):.2f}', border=1, align='R')
+            pdf.cell(col_w[4], 7, f'S/ {float(item.subtotal):.2f}', border=1, align='R')
+            pdf.ln()
+
+        pdf.set_font('Helvetica', 'B', 10)
+        pdf.cell(sum(col_w[:4]), 8, 'Total', border=1, align='R')
+        pdf.cell(col_w[4], 8, f'S/ {float(despacho.total):.2f}', border=1, align='R')
+
+        buf = BytesIO()
+        pdf.output(buf)
+        buf.seek(0)
+        return HttpResponse(buf, content_type='application/pdf',
+                            headers={'Content-Disposition': f'attachment; filename="despacho_{despacho.id}.pdf"'})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
