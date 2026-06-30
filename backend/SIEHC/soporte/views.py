@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.response import Response
 from .models import Mensaje
 from .serializers import MensajeSerializer
 
@@ -8,19 +9,37 @@ class MensajeViewSet(viewsets.ModelViewSet):
     serializer_class = MensajeSerializer
 
     def get_queryset(self):
-        queryset = Mensaje.objects.select_related('paciente', 'medico').all()
+        user = self.request.user
+        qs = Mensaje.objects.select_related('paciente', 'medico').all()
 
-        paciente_id = self.request.query_params.get('paciente')
-        medico_id = self.request.query_params.get('medico')
-        leido = self.request.query_params.get('leido')
+        if hasattr(user, 'paciente'):
+            qs = qs.filter(paciente=user.paciente)
+        elif hasattr(user, 'medico'):
+            qs = qs.filter(medico=user.medico)
 
-        if paciente_id:
-            queryset = queryset.filter(paciente_id=paciente_id)
+        return qs.order_by('fecha_hora')
 
-        if medico_id:
-            queryset = queryset.filter(medico_id=medico_id)
+    def create(self, request, *args, **kwargs):
+        contenido = request.data.get('contenido', '').strip()
+        if not contenido:
+            return Response({"error": "El mensaje no puede estar vacio."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if leido is not None:
-            queryset = queryset.filter(leido=leido)
+        if not hasattr(request.user, 'paciente'):
+            return Response({"error": "Solo los pacientes pueden enviar mensajes."}, status=status.HTTP_403_FORBIDDEN)
 
-        return queryset.order_by('fecha_hora')  # tipo chat cronológico
+        mensaje = Mensaje.objects.create(
+            paciente=request.user.paciente,
+            contenido=contenido,
+            enviado_por='paciente',
+        )
+
+        respuesta = Mensaje.objects.create(
+            paciente=request.user.paciente,
+            contenido="Gracias por tu mensaje. Un medico se comunicara contigo pronto.",
+            enviado_por='sistema',
+        )
+
+        return Response({
+            "mensaje": MensajeSerializer(mensaje).data,
+            "respuesta": MensajeSerializer(respuesta).data,
+        }, status=status.HTTP_201_CREATED)
