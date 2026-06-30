@@ -136,16 +136,16 @@ class HospitalViewSet(viewsets.ModelViewSet):
         for item in citas_por_hospital:
             hid = item['medico__usuario__medico__hospital__id']
             reporte_data.append(dict(
-                hospital=item['medico__usuario__medico__hospital__nombre'],
+                hospital=item['medico__usuario__medico__hospital__nombre'] or "—",
                 citas=item['total_citas'],
                 medicos=medicos_map.get(hid, 0),
             ))
 
         ids_con_citas = {item['medico__usuario__medico__hospital__id'] for item in citas_por_hospital}
         for m in medicos_por_hospital:
-            if m['hospital__id'] not in ids_con_citas:
+            if m['hospital__id'] and m['hospital__id'] not in ids_con_citas:
                 reporte_data.append(dict(
-                    hospital=m['hospital__nombre'],
+                    hospital=m['hospital__nombre'] or "—",
                     citas=0,
                     medicos=m['total_medicos'],
                 ))
