@@ -87,6 +87,32 @@ const AdminReportes = () => {
   const handleDownload  = (name: string) => toast.success(`Descargando: ${name}`);
   const handleGenerate  = (type: string)  => toast.success(`Generando reporte de ${type}...`);
 
+  const descargarPDF = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const params = new URLSearchParams();
+      if (filtroDesde) params.append("desde", filtroDesde);
+      if (filtroHasta) params.append("hasta", filtroHasta);
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/hospitales/reporte/pdf/${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { toast.error("Error al descargar el PDF"); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reporte_hospitales.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("PDF descargado correctamente");
+    } catch {
+      toast.error("Error al descargar el PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -157,6 +183,10 @@ const AdminReportes = () => {
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : "Filtrar"
                   }
+                </Button>
+                <Button variant="outline" onClick={descargarPDF} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  PDF
                 </Button>
               </div>
             </CardContent>
