@@ -6,3 +6,4 @@ python-dotenv
 Pillow
 pymysql
 pdfplumber
+fpdf2
