@@ -14,7 +14,9 @@ import {
   Loader2,
   PlayCircle,
   CheckCircle2,
+  Download,
 } from "lucide-react";
+import config from "@/config/env";
 import {
   Dialog,
   DialogContent,
@@ -124,6 +126,23 @@ const DoctorHistoriales = () => {
       console.error(err);
       alert("Error al obtener la cita activa del paciente.");
     }
+  };
+
+  const descargarPDF = async (recetaId: number) => {
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch(`${config.api.baseUrl}/recetas/${recetaId}/pdf/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receta_${recetaId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* silent */ }
   };
 
   useEffect(() => {
@@ -334,19 +353,24 @@ const DoctorHistoriales = () => {
                                         key={r.id}
                                         className="p-3 rounded-lg border border-border bg-secondary/30"
                                       >
-                                        <p className="text-sm font-medium text-foreground">
-                                          {r.medicamento.nombre}
-                                        </p>
-
-                                        <p className="text-xs text-foreground/70 mt-1">
-                                          <strong>Dosis:</strong>{" "}
-                                          {r.instruccion_dosis}
-                                        </p>
-
-                                        <p className="text-xs text-foreground/70">
-                                          <strong>Período:</strong>{" "}
-                                          {r.periodo_dosis}
-                                        </p>
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div>
+                                            <p className="text-sm font-medium text-foreground">
+                                              {r.medicamento.nombre}
+                                            </p>
+                                            <p className="text-xs text-foreground/70 mt-1">
+                                              <strong>Dosis:</strong>{" "}
+                                              {r.instruccion_dosis}
+                                            </p>
+                                            <p className="text-xs text-foreground/70">
+                                              <strong>Período:</strong>{" "}
+                                              {r.periodo_dosis}
+                                            </p>
+                                          </div>
+                                          <Button variant="ghost" size="sm" onClick={() => descargarPDF(r.id)} className="h-6 w-6 p-0 flex-shrink-0">
+                                            <Download className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     ))
                                   ) : (
