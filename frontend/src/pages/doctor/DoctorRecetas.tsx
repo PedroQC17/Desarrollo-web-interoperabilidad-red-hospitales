@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pill, Plus, Calendar, User, Loader2, AlertCircle } from "lucide-react";
+import { Pill, Plus, Calendar, User, Loader2, AlertCircle, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import config from "@/config/env";
 
 interface Receta {
   id: number;
@@ -84,6 +85,25 @@ const DoctorRecetas = () => {
       setRecetas(Array.isArray(data) ? data : []);
     } catch (err) {
       setRecetas([]);
+    }
+  };
+
+  const descargarPDF = async (recetaId: number) => {
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch(`${config.api.baseUrl}/recetas/${recetaId}/pdf/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Error al descargar PDF");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receta_${recetaId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silent
     }
   };
 
@@ -372,7 +392,12 @@ const DoctorRecetas = () => {
                               <strong>Cantidad:</strong> {receta.cantidad_suministrada} unidades
                             </p>
                           </div>
-                          <Badge className="flex-shrink-0">{receta.categoria}</Badge>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Button variant="ghost" size="sm" onClick={() => descargarPDF(receta.id)} className="h-7 px-2">
+                              <Download className="w-3.5 h-3.5" />
+                            </Button>
+                            <Badge>{receta.categoria}</Badge>
+                          </div>
                         </div>
                       </div>
                     ))
