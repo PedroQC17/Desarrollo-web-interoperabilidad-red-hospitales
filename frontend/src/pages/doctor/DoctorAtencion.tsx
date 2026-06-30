@@ -12,8 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Check, Loader2, AlertCircle, Pill, ShoppingCart,
   ArrowRight, ArrowLeft, Plus, Trash2, CheckCircle2,
-  ChevronRight, FileText, Landmark, CalendarDays, Clock, MapPin, Stethoscope
+  ChevronRight, FileText, Landmark, CalendarDays, Clock, MapPin, Stethoscope, Download
 } from "lucide-react";
+import config from "@/config/env";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -218,6 +219,23 @@ export default function DoctorAtencion() {
     } finally {
       setLoadingResumen(false);
     }
+  };
+
+  const descargarPDF = async (recetaId: number) => {
+    const token = localStorage.getItem("access");
+    try {
+      const res = await fetch(`${config.api.baseUrl}/recetas/${recetaId}/pdf/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receta_${recetaId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* silent */ }
   };
 
   useEffect(() => { if (citaId) fetchCitaDetalle(); }, [citaId]);
@@ -648,7 +666,12 @@ export default function DoctorAtencion() {
                           <h4 className="font-semibold text-sm text-foreground">{r.medicamento_nombre}</h4>
                           <p className="text-xs text-muted-foreground mt-0.5">{r.intencion}</p>
                         </div>
-                        <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none capitalize text-[10px]">{r.categoria}</Badge>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button variant="ghost" size="sm" onClick={() => descargarPDF(r.id)} className="h-6 w-6 p-0">
+                            <Download className="w-3 h-3" />
+                          </Button>
+                          <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none capitalize text-[10px]">{r.categoria}</Badge>
+                        </div>
                       </div>
                       <div className="text-xs text-foreground/80 grid grid-cols-2 gap-1.5 pt-1.5 border-t border-border/60">
                         <div><strong>Dosis:</strong> {r.instruccion_dosis}</div>
