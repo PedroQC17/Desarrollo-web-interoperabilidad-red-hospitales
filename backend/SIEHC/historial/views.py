@@ -1,4 +1,7 @@
+from io import BytesIO
 from django.db import models
+from django.http import HttpResponse
+from fpdf import FPDF
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
@@ -313,8 +316,53 @@ class RecetaViewSet(ModelViewSet):
         if user.tipo_usuario == "medico":
             qs = qs.filter(historial__paciente__citas__medico__usuario=user).distinct()
         return qs
-    
 
+    @action(detail=True, methods=['get'])
+    def pdf(self, request, pk=None):
+        receta = self.get_object()
+        hist = receta.historial
+        paciente = hist.paciente
+        cita = paciente.citas.order_by('-inicio').first()
+        hospital = cita.medico.hospital.nombre if cita and cita.medico and cita.medico.hospital else "—"
+        medico = cita.medico.usuario.nombre if cita and cita.medico else "—"
+
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('Helvetica', 'B', 18)
+        pdf.cell(0, 12, 'SIEHC - Receta Medica', new_x='LMARGIN', new_y='NEXT', align='C')
+        pdf.ln(6)
+
+        pdf.set_font('Helvetica', '', 10)
+        items = [
+            ('Receta N.', f'#REC-{receta.id}'),
+            ('Hospital', hospital),
+            ('Medico', medico),
+            ('Paciente', paciente.usuario.nombre),
+            ('Fecha', receta.fecha_emitida.strftime('%d/%m/%Y %H:%M')),
+            ('Medicamento', receta.medicamento.nombre),
+            ('Cantidad', str(receta.cantidad_suministrada)),
+            ('Dosis', receta.instruccion_dosis),
+            ('Periodo', receta.periodo_dosis),
+            ('Intencion', receta.intencion),
+            ('Categoria', receta.get_categoria_display()),
+            ('Prioridad', receta.get_prioridad_display()),
+        ]
+        for label, value in items:
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.cell(30, 7, label + ':', border=1)
+            pdf.set_font('Helvetica', '', 10)
+            pdf.cell(0, 7, str(value), border=1, new_x='LMARGIN', new_y='NEXT')
+
+        pdf.ln(16)
+        pdf.set_font('Helvetica', '', 10)
+        pdf.cell(0, 7, '___________________________', new_x='LMARGIN', new_y='NEXT', align='R')
+        pdf.cell(0, 7, f'Firma: {medico}', new_x='LMARGIN', new_y='NEXT', align='R')
+
+        buf = BytesIO()
+        pdf.output(buf)
+        buf.seek(0)
+        return HttpResponse(buf, content_type='application/pdf',
+                            headers={'Content-Disposition': f'attachment; filename="receta_{receta.id}.pdf"'})
 
 
 class DiagnosticoViewSet(ModelViewSet):
