@@ -109,6 +109,7 @@ class HistorialDetalleSerializer(serializers.ModelSerializer):
         model  = Historial
         fields = [
             'id', 'paciente', 'fecha_creacion', 'activo',
+            'compartir_red', 'investigacion',
             'diagnosticos', 'recetas', 'observaciones', 'examenes',
         ]
 
