@@ -89,7 +89,7 @@ const AdminReportes = () => {
 
   const descargarPDF = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("access");
       const params = new URLSearchParams();
       if (filtroDesde) params.append("desde", filtroDesde);
       if (filtroHasta) params.append("hasta", filtroHasta);
