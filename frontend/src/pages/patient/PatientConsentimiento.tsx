@@ -19,6 +19,8 @@ const PatientConsentimiento = () => {
       try {
         const data = await api("/historiales/mi-historial/");
         setConsentGiven(data.activo === true);
+        setShareWithNetwork(data.compartir_red === true);
+        setShareForResearch(data.investigacion === true);
       } catch {
         toast.error("No se pudo cargar el estado del consentimiento.");
       } finally {
@@ -26,6 +28,22 @@ const PatientConsentimiento = () => {
       }
     })();
   }, []);
+
+  const toggleSwitch = async (campo: string, valor: boolean) => {
+    setSaving(true);
+    try {
+      const res = await api("/historiales/consentimiento/", {
+        method: "PATCH",
+        body: JSON.stringify({ [campo]: valor }),
+      });
+      if (campo === "compartir_red") setShareWithNetwork(res.compartir_red);
+      if (campo === "investigacion") setShareForResearch(res.investigacion);
+    } catch {
+      toast.error("Error al actualizar la preferencia.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const toggleConsentimiento = async () => {
     setSaving(true);
@@ -87,7 +105,7 @@ const PatientConsentimiento = () => {
               <span className="text-sm font-medium text-foreground">
                 {shareWithNetwork ? "Activado" : "Desactivado"}
               </span>
-              <Switch checked={shareWithNetwork} onCheckedChange={setShareWithNetwork} />
+              <Switch checked={shareWithNetwork} onCheckedChange={(v) => toggleSwitch("compartir_red", v)} disabled={saving} />
             </div>
           </CardContent>
         </Card>
@@ -105,7 +123,7 @@ const PatientConsentimiento = () => {
               <span className="text-sm font-medium text-foreground">
                 {shareForResearch ? "Activado" : "Desactivado"}
               </span>
-              <Switch checked={shareForResearch} onCheckedChange={setShareForResearch} />
+              <Switch checked={shareForResearch} onCheckedChange={(v) => toggleSwitch("investigacion", v)} disabled={saving} />
             </div>
           </CardContent>
         </Card>
