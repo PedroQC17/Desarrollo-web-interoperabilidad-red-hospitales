@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, Calendar, Loader2 } from "lucide-react";
+import { Receipt, Calendar, Loader2, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface Factura {
   id: number;
@@ -80,6 +82,27 @@ const PatientFacturacion = () => {
   useEffect(() => {
     fetchFacturas();
   }, []);
+
+  const descargarPDF = async (id: number, tipo: string) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/facturacion/${id}/pdf/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { toast.error("Error al descargar la factura"); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `factura_${tipo}_${id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Error al descargar la factura");
+    }
+  };
 
   const filtered = facturas.filter((f) => {
     if (filterType === "consulta") return f.tipo === "consulta";
@@ -209,9 +232,15 @@ const PatientFacturacion = () => {
                       )}
                     </div>
                   </div>
-                  <span className="font-bold text-foreground text-lg whitespace-nowrap">
-                    S/ {Number(factura.monto_total).toFixed(2)}
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span className="font-bold text-foreground text-lg whitespace-nowrap">
+                      S/ {Number(factura.monto_total).toFixed(2)}
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => descargarPDF(factura.id, factura.tipo)} className="gap-1 text-xs h-7">
+                      <Download className="w-3 h-3" />
+                      PDF
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
