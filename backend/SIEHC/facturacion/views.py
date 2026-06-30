@@ -1,3 +1,6 @@
+from io import BytesIO
+from django.http import HttpResponse
+from fpdf import FPDF
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -56,7 +59,43 @@ class FacturacionViewSet(ModelViewSet):
         factura.save()
 
         return Response({"msg": "Factura anulada"})
-    
+
+    @action(detail=True, methods=['get'])
+    def pdf(self, request, pk=None):
+        factura = self.get_object()
+        cita = factura.cita
+        hospital = cita.medico.hospital.nombre if cita and cita.medico and cita.medico.hospital else "—"
+        medico_nombre = cita.medico.usuario.nombre if cita and cita.medico else "—"
+        paciente_nombre = cita.paciente.usuario.nombre if cita and cita.paciente else "—"
+
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font('Helvetica', 'B', 18)
+        pdf.cell(0, 12, 'SIEHC - Factura', new_x='LMARGIN', new_y='NEXT', align='C')
+        pdf.ln(6)
+
+        pdf.set_font('Helvetica', '', 10)
+        items = [
+            ('Factura N.', f'#{factura.id}'),
+            ('Hospital', hospital),
+            ('Paciente', paciente_nombre),
+            ('Medico', medico_nombre),
+            ('Fecha', factura.fecha_emitida.strftime('%d/%m/%Y %H:%M')),
+            ('Descripcion', factura.descripcion),
+            ('Monto Total', f'S/ {factura.monto_total}'),
+            ('Estado', factura.get_estado_pago_display()),
+        ]
+        for label, value in items:
+            pdf.set_font('Helvetica', 'B', 10)
+            pdf.cell(35, 7, label + ':', border=1)
+            pdf.set_font('Helvetica', '', 10)
+            pdf.cell(0, 7, str(value), border=1, new_x='LMARGIN', new_y='NEXT')
+
+        buf = BytesIO()
+        pdf.output(buf)
+        buf.seek(0)
+        return HttpResponse(buf, content_type='application/pdf',
+                            headers={'Content-Disposition': f'attachment; filename="factura_{factura.id}.pdf"'})
 
     #Funciones para la atencion medica
 
