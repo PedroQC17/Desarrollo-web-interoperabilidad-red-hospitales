@@ -1,14 +1,48 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, ShieldAlert, Info, CheckCircle2, XCircle } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Info, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 const PatientConsentimiento = () => {
-  const [consentGiven, setConsentGiven] = useState(true);
+  const [consentGiven, setConsentGiven] = useState(false);
   const [shareWithNetwork, setShareWithNetwork] = useState(true);
   const [shareForResearch, setShareForResearch] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await api("/historiales/mi-historial/");
+        setConsentGiven(data.activo === true);
+      } catch {
+        toast.error("No se pudo cargar el estado del consentimiento.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const toggleConsentimiento = async () => {
+    setSaving(true);
+    const nuevoEstado = !consentGiven;
+    try {
+      const res = await api("/historiales/consentimiento/", {
+        method: "PATCH",
+        body: JSON.stringify({ aceptado: nuevoEstado }),
+      });
+      setConsentGiven(res.consentimiento_activo);
+      toast.success(res.mensaje || "Consentimiento actualizado.");
+    } catch {
+      toast.error("Error al actualizar el consentimiento.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -98,10 +132,13 @@ const PatientConsentimiento = () => {
       <div className="flex justify-end">
         <Button
           variant={consentGiven ? "destructive" : "default"}
-          onClick={() => setConsentGiven(!consentGiven)}
+          onClick={toggleConsentimiento}
+          disabled={loading || saving}
           className="gap-2"
         >
-          {consentGiven ? (
+          {saving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : consentGiven ? (
             <>
               <XCircle className="w-4 h-4" />
               Revocar Consentimiento
