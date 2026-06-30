@@ -240,16 +240,18 @@ const AdminHospitales = () => {
         <div className="space-y-1">
           <Label>Tipo <span className="text-destructive">*</span></Label>
           <select name="tipo" value={form.tipo} onChange={handleChange}
-            className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background">
+            className={`w-full border ${errores.tipo ? "border-destructive" : "border-input"} rounded-md px-3 py-2 text-sm bg-background`}>
             <option value="publico">Público</option>
             <option value="privado">Privado</option>
             <option value="clinica">Clínica</option>
             <option value="centro_salud">Centro de Salud</option>
           </select>
+          {errores.tipo && <p className="text-xs text-destructive mt-1">{errores.tipo}</p>}
         </div>
         <div className="space-y-1">
           <Label>Nombre <span className="text-destructive">*</span></Label>
-          <Input name="nombre" placeholder="Hospital Nacional..." value={form.nombre} onChange={handleChange} onKeyDown={handleNombreKeyDown} />
+          <Input name="nombre" placeholder="Hospital Nacional..." value={form.nombre} onChange={handleChange} onKeyDown={handleNombreKeyDown} className={errores.nombre ? "border-destructive" : ""} />
+          {errores.nombre && <p className="text-xs text-destructive mt-1">{errores.nombre}</p>}
         </div>
       </div>
 
@@ -260,36 +262,41 @@ const AdminHospitales = () => {
         </div>
         <div className="space-y-1">
           <Label>Contacto <span className="text-destructive">*</span></Label>
-          <Input name="contacto" placeholder="999999999" value={form.contacto} onChange={handleChange} onKeyDown={handleContactoKeyDown} maxLength={9} inputMode="numeric" />
+          <Input name="contacto" placeholder="999999999" value={form.contacto} onChange={handleChange} onKeyDown={handleContactoKeyDown} maxLength={9} inputMode="numeric" className={errores.contacto ? "border-destructive" : ""} />
+          {errores.contacto && <p className="text-xs text-destructive mt-1">{errores.contacto}</p>}
         </div>
       </div>
 
       <div className="space-y-1">
-        <Label>Especialidad <span className="text-destructive">*</span></Label>
-        <Input name="especialidad" placeholder="Cardiología, Traumatología..." value={form.especialidad} onChange={handleChange} />
-      </div>
+          <Label>Especialidad <span className="text-destructive">*</span></Label>
+          <Input name="especialidad" placeholder="Cardiología, Traumatología..." value={form.especialidad} onChange={handleChange} className={errores.especialidad ? "border-destructive" : ""} />
+          {errores.especialidad && <p className="text-xs text-destructive mt-1">{errores.especialidad}</p>}
+        </div>
 
       <div className="space-y-1">
-        <Label>Ubicación <span className="text-destructive">*</span></Label>
-        <Input name="ubicacion" placeholder="Av. Alfonso Ugarte 848, Lima" value={form.ubicacion} onChange={handleChange} />
-      </div>
+          <Label>Ubicación <span className="text-destructive">*</span></Label>
+          <Input name="ubicacion" placeholder="Av. Alfonso Ugarte 848, Lima" value={form.ubicacion} onChange={handleChange} className={errores.ubicacion ? "border-destructive" : ""} />
+          {errores.ubicacion && <p className="text-xs text-destructive mt-1">{errores.ubicacion}</p>}
+        </div>
 
       <div className="space-y-1">
-        <Label>Horario de atención <span className="text-destructive">*</span></Label>
-        <Input name="periodo" placeholder="Lun-Vie 8am-6pm" value={form.periodo} onChange={handleChange} />
-      </div>
+          <Label>Horario de atención <span className="text-destructive">*</span></Label>
+          <Input name="periodo" placeholder="Lun-Vie 8am-6pm" value={form.periodo} onChange={handleChange} className={errores.periodo ? "border-destructive" : ""} />
+          {errores.periodo && <p className="text-xs text-destructive mt-1">{errores.periodo}</p>}
+        </div>
 
       <div className="space-y-1">
         <Label>Descripción</Label>
-        <textarea
-          name="descripcion"
-          placeholder="Descripción del hospital..."
-          value={form.descripcion}
-          onChange={handleChange}
-          rows={3}
-          maxLength={100}
-          className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background resize-none"
-        />
+          <textarea
+            name="descripcion"
+            placeholder="Descripción del hospital..."
+            value={form.descripcion}
+            onChange={handleChange}
+            rows={3}
+            maxLength={100}
+            className={`w-full border ${errores.descripcion ? "border-destructive" : "border-input"} rounded-md px-3 py-2 text-sm bg-background resize-none`}
+          />
+          {errores.descripcion && <p className="text-xs text-destructive mt-1">{errores.descripcion}</p>}
       </div>
 
       <DialogFooter>
@@ -311,7 +318,7 @@ const AdminHospitales = () => {
         </div>
 
         {/* Dialog Crear */}
-        <Dialog open={openCrear} onOpenChange={(v) => { setOpenCrear(v); if (!v) setForm(emptyForm); }}>
+        <Dialog open={openCrear} onOpenChange={(v) => { setOpenCrear(v); if (!v) { setForm(emptyForm); limpiarErrores(); } }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -331,7 +338,7 @@ const AdminHospitales = () => {
       {/* Dialog Editar */}
       <Dialog open={openEditar} onOpenChange={(v) => {
         setOpenEditar(v);
-        if (!v) { setHospitalEditar(null); setForm(emptyForm); }
+        if (!v) { setHospitalEditar(null); setForm(emptyForm); limpiarErrores(); }
       }}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
