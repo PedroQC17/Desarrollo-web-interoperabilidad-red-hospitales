@@ -435,7 +435,8 @@ class ReporteServiciosView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from django.db.models import Sum, Count
+        from django.db.models import Sum, Count, F, Value
+        from django.db.models.functions import Coalesce
 
         desde = request.query_params.get('desde')
         hasta = request.query_params.get('hasta')
@@ -450,12 +451,24 @@ class ReporteServiciosView(APIView):
         if hospital_id:
             citas = citas.filter(medico__hospital_id=hospital_id)
 
+        # Anotar cada cita con su ingreso real por servicio.
+        # Usa el monto facturado (si existe) o el costo_servicio como respaldo.
+        from django.db.models import DecimalField
+        citas = citas.annotate(
+            ingreso_servicio=Coalesce(
+                F('factura__monto_total'),
+                F('costo_servicio'),
+                Value(0, output_field=DecimalField()),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+
         # Ingresos por hospital
         por_hospital = citas.values(
             'medico__hospital__id',
             'medico__hospital__nombre',
         ).annotate(
-            total_ingresos=Sum('costo_servicio'),
+            total_ingresos=Sum('ingreso_servicio'),
             total_atenciones=Count('id')
         ).order_by('-total_ingresos')
 
@@ -463,7 +476,7 @@ class ReporteServiciosView(APIView):
         por_servicio = citas.values(
             'categoria_servicio',
         ).annotate(
-            total_ingresos=Sum('costo_servicio'),
+            total_ingresos=Sum('ingreso_servicio'),
             total_atenciones=Count('id')
         ).order_by('-total_ingresos')
 
@@ -473,13 +486,13 @@ class ReporteServiciosView(APIView):
             'medico__especialidad',
             'medico__hospital__nombre',
         ).annotate(
-            total_ingresos=Sum('costo_servicio'),
+            total_ingresos=Sum('ingreso_servicio'),
             total_atenciones=Count('id')
         ).order_by('-total_ingresos')
 
         # Totales globales
         totales = citas.aggregate(
-            total_ingresos=Sum('costo_servicio'),
+            total_ingresos=Sum('ingreso_servicio'),
             total_atenciones=Count('id'),
         )
 

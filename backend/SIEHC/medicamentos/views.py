@@ -8,7 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Medicamento, Despacho
+from .models import Medicamento, Despacho, DespachoItem
 from .serializers import MedicamentoSerializer, DespachoInputSerializer, DespachoSerializer
 from services.gestion_medicos.gestion_atencion import (
     catalogo_medicamentos,
