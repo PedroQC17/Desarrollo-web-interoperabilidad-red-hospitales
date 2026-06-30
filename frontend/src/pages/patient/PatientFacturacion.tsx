@@ -88,7 +88,7 @@ const PatientFacturacion = () => {
 
   const descargarPDF = async (id: number, tipo: string) => {
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("access");
       const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/facturacion/${id}/pdf/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
