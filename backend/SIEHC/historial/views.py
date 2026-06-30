@@ -208,15 +208,17 @@ class ConsentimientoView(APIView):
         paciente = request.user.paciente
         aceptado = request.data.get("aceptado")
 
-        if aceptado is None:
+        if aceptado is None and "compartir_red" not in request.data and "investigacion" not in request.data:
             return Response(
-                {"error": "El campo 'aceptado' es obligatorio (true/false)."},
+                {"error": "Debes enviar al menos un campo: 'aceptado', 'compartir_red' o 'investigacion'."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         historial, _ = obtener_o_crear_historial(paciente)
-        historial.activo = bool(aceptado)
-        update = ["activo"]
+        update = []
+        if aceptado is not None:
+            historial.activo = bool(aceptado)
+            update.append("activo")
         if "compartir_red" in request.data:
             historial.compartir_red = bool(request.data["compartir_red"])
             update.append("compartir_red")
@@ -227,10 +229,7 @@ class ConsentimientoView(APIView):
 
         return Response(
             {
-                "mensaje": (
-                    "Consentimiento otorgado." if aceptado
-                    else "Consentimiento revocado."
-                ),
+                "mensaje": "Preferencias actualizadas.",
                 "historial_id": historial.id,
                 "consentimiento_activo": historial.activo,
                 "compartir_red": historial.compartir_red,
