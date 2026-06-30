@@ -22,7 +22,7 @@ const PatientSoporte = () => {
   const cargarMensajes = async () => {
     setLoading(true);
     try {
-      const data = await api("/mensajes/mis-mensajes/");
+      const data = await api("/mensajes/mensajes/");
       setMessages(Array.isArray(data) ? data : []);
     } catch {
       setMessages([]);
@@ -38,7 +38,7 @@ const PatientSoporte = () => {
     if (!input.trim() || sending) return;
     setSending(true);
     try {
-      const data = await api("/mensajes/mis-mensajes/", {
+      const data = await api("/mensajes/mensajes/", {
         method: "POST",
         body: JSON.stringify({ contenido: input }),
       });
