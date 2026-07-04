@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Usuario, Paciente, Medico, Administrador
+from .models import Usuario, Paciente, Medico, Administrador, NotificacionPreferencia
 from django.contrib.auth import authenticate
 
 from services.gestion_usuarios.registro_usuarios import login_usuario,register_usuario
@@ -119,4 +119,22 @@ class UsuarioListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ['id', 'email', 'nombre', 'telecom', 'genero', 'fec_nac', 'tipo_usuario', 'is_active']
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['nombre', 'telecom', 'genero', 'fec_nac']
+
+
+class ProfilePhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['foto']
+
+
+class NotificacionPreferenciaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificacionPreferencia
+        exclude = ['usuario']
 
