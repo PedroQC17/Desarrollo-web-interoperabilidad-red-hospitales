@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   Check, Loader2, AlertCircle, Pill, ShoppingCart,
   ArrowRight, ArrowLeft, Plus, Trash2, CheckCircle2,
-  ChevronRight, FileText, Landmark, CalendarDays, Clock, MapPin, Stethoscope, Download
+  ChevronRight, FileText, Landmark, CalendarDays, Clock, MapPin, Stethoscope, Download, Eye
 } from "lucide-react";
 import config from "@/config/env";
 
@@ -158,6 +160,8 @@ export default function DoctorAtencion() {
     setRecetasForm((prev) => ({ ...prev, [field]: value }));
   const [recetasEmitidas, setRecetasEmitidas] = useState<Receta[]>([]);
   const [loadingRecetas, setLoadingRecetas] = useState(false);
+  const [showPreviewReceta, setShowPreviewReceta] = useState(false);
+  const [previewRecetaPayload, setPreviewRecetaPayload] = useState<any>(null);
 
   // Step 4
   const [despachoCart, setDespachoCart] = useState<Array<{ id: number; nombre: string; cantidad: number; stock: number }>>([]);
@@ -296,25 +300,45 @@ export default function DoctorAtencion() {
     });
   };
 
-  const handleAddReceta = (e: React.FormEvent) => {
-    e.preventDefault();
+  const buildPreviewPayload = () => {
     const { medicamentoId, intencion, categoria, prioridad, instruccion_dosis, periodo_dosis, cantidad_suministrada } = recetasForm;
     if (!medicamentoId || !intencion || !instruccion_dosis || !periodo_dosis || !cantidad_suministrada) {
       setErrorMsg("Por favor, rellene todos los campos de la receta.");
-      return;
+      return null;
     }
-    withSubmit(async () => {
+    return {
+      medicamento: parseInt(medicamentoId),
+      intencion, categoria, prioridad, instruccion_dosis, periodo_dosis,
+      cantidad_suministrada: parseInt(cantidad_suministrada),
+    };
+  };
+
+  const handlePreviewReceta = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    const payload = buildPreviewPayload();
+    if (!payload) return;
+    setPreviewRecetaPayload(payload);
+    setShowPreviewReceta(true);
+  };
+
+  const handleConfirmReceta = async () => {
+    if (!previewRecetaPayload) return;
+    setErrorMsg(null);
+    setSubmitting(true);
+    try {
       await api(`/citas/${citaId}/receta/`, {
         method: "POST",
-        body: JSON.stringify({
-          medicamento: parseInt(medicamentoId),
-          intencion, categoria, prioridad, instruccion_dosis, periodo_dosis,
-          cantidad_suministrada: parseInt(cantidad_suministrada),
-        }),
+        body: JSON.stringify(previewRecetaPayload),
       });
+      setShowPreviewReceta(false);
       setRecetasForm(RECETA_INIT);
       fetchRecetas();
-    });
+    } catch (err: any) {
+      setErrorMsg(err?.error || "Error al registrar receta.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDespacho = () => {
@@ -589,7 +613,7 @@ export default function DoctorAtencion() {
                 <CardDescription>Configure y añada recetas. Puede agregar múltiples.</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleAddReceta} className="space-y-4">
+                <form onSubmit={handlePreviewReceta} className="space-y-4">
                   <div className="space-y-2">
                     <Label>Medicamento <span className="text-destructive">*</span></Label>
                     <Select value={recetasForm.medicamentoId} onValueChange={(v) => setReceta("medicamentoId", v)}>
@@ -637,10 +661,77 @@ export default function DoctorAtencion() {
                     <Input type="number" placeholder="Ej: 20" min="1" value={recetasForm.cantidad_suministrada}
                       onChange={(e) => setReceta("cantidad_suministrada", e.target.value)} required />
                   </div>
-                  <Button type="submit" disabled={submitting} className="w-full gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                    {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <Plus className="w-4 h-4" /> Registrar y Añadir Receta
+                  <Button type="submit" className="w-full gap-2">
+                    <Eye className="w-4 h-4" /> Vista Previa y Confirmar
                   </Button>
+
+                  <Dialog open={showPreviewReceta} onOpenChange={setShowPreviewReceta}>
+                    <DialogContent className="sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Pill className="w-5 h-5 text-primary" />
+                          Vista Previa de Receta
+                        </DialogTitle>
+                      </DialogHeader>
+                      {previewRecetaPayload && (
+                        <div className="space-y-4 py-2">
+                          <div className="border border-border/80 rounded-xl bg-secondary/5 p-5 space-y-3">
+                            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                              <div>
+                                <p className="text-sm font-bold text-foreground">
+                                  {medicamentosCatalogo.find((m) => m.id === previewRecetaPayload.medicamento)?.nombre || "Medicamento"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Stock: {medicamentosCatalogo.find((m) => m.id === previewRecetaPayload.medicamento)?.stock || 0}
+                                </p>
+                              </div>
+                              <Badge className="capitalize">{previewRecetaPayload.categoria}</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Intención</p>
+                                <p className="font-medium text-foreground">{previewRecetaPayload.intencion}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Prioridad</p>
+                                <Badge variant="outline" className="capitalize">{previewRecetaPayload.prioridad}</Badge>
+                              </div>
+                            </div>
+                            <Separator />
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Dosis</p>
+                                <p className="font-medium text-foreground">{previewRecetaPayload.instruccion_dosis}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Período</p>
+                                <p className="font-medium text-foreground">{previewRecetaPayload.periodo_dosis}</p>
+                              </div>
+                            </div>
+                            <div className="bg-primary/5 rounded-lg p-3 flex items-center justify-between">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Cantidad</p>
+                                <p className="text-lg font-bold text-foreground">{previewRecetaPayload.cantidad_suministrada} unid.</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">Costo unitario</p>
+                                <p className="text-sm font-semibold">
+                                  S/ {Number(medicamentosCatalogo.find((m) => m.id === previewRecetaPayload.medicamento)?.costo || 0).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setShowPreviewReceta(false)}>Cancelar</Button>
+                        <Button onClick={handleConfirmReceta} disabled={submitting} className="gap-2">
+                          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                          {submitting ? "Registrando..." : "Confirmar y Añadir Receta"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </form>
               </CardContent>
             </Card>
