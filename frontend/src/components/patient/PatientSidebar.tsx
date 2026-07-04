@@ -1,6 +1,7 @@
-import { Activity, FileText, CalendarDays, ShieldCheck, Receipt, MessageCircle, Home, LogOut, User } from "lucide-react";
+import { Activity, FileText, CalendarDays, ShieldCheck, Receipt, MessageCircle, Home, LogOut, User, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/authContext";
 
 const navItems = [
   { icon: Home, label: "Panel Principal", path: "/paciente" },
@@ -9,10 +10,12 @@ const navItems = [
   { icon: ShieldCheck, label: "Consentimiento", path: "/paciente/consentimiento" },
   { icon: Receipt, label: "Facturación", path: "/paciente/facturacion" },
   { icon: MessageCircle, label: "Soporte", path: "/paciente/soporte" },
+  { icon: Settings, label: "Mi Perfil", path: "/paciente/perfil" },
 ];
 
 const PatientSidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-sidebar-background min-h-screen">
@@ -29,8 +32,8 @@ const PatientSidebar = () => {
             <User className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">Paciente</p>
-            {/*Agregar el nombre del paciente*/}
+            <p className="text-sm font-semibold text-sidebar-foreground">{user?.nombre || "Paciente"}</p>
+            <p className="text-xs text-muted-foreground">Paciente</p>
           </div>
         </div>
       </div>

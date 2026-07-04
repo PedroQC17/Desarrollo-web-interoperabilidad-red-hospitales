@@ -1,9 +1,10 @@
-import { Activity, CalendarDays, Stethoscope, Pill, FileText, Package, Home, LogOut, Menu } from "lucide-react";
+import { Activity, CalendarDays, Stethoscope, Pill, FileText, Package, Home, LogOut, Menu, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useAuth } from "@/lib/authContext";
 
 const navItems = [
   { icon: Home, label: "Panel Principal", path: "/medico" },
@@ -12,11 +13,13 @@ const navItems = [
   { icon: Stethoscope, label: "Diagnósticos", path: "/medico/diagnosticos" },
   { icon: Pill, label: "Recetas", path: "/medico/recetas" },
   { icon: Package, label: "Medicamentos", path: "/medico/medicamentos" },
+  { icon: Settings, label: "Mi Perfil", path: "/medico/perfil" },
 ];
 
 const DoctorMobileNav = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <header className="lg:hidden flex items-center justify-between px-4 h-14 border-b border-border bg-background">
@@ -34,6 +37,10 @@ const DoctorMobileNav = () => {
           <div className="flex items-center gap-2 px-6 h-16 border-b border-border">
             <Activity className="w-6 h-6 text-primary" />
             <span className="font-bold text-foreground">SIEHC</span>
+          </div>
+          <div className="px-4 py-3 border-b border-border">
+            <p className="text-sm font-semibold text-foreground">{user?.nombre || "Médico"}</p>
+            <p className="text-xs text-muted-foreground">{user?.especialidad || "Médico"}</p>
           </div>
           <nav className="px-3 py-4 space-y-1">
             {navItems.map((item) => {

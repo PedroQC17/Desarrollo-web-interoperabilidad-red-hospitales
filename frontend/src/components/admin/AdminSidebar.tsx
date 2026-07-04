@@ -1,6 +1,7 @@
-import { Activity, Building2, Users, BarChart3, Pill, Settings, Home, LogOut, Shield } from "lucide-react";
+import { Activity, Building2, Users, BarChart3, Pill, Settings, Home, LogOut, Shield, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/authContext";
 
 const navItems = [
   { icon: Home, label: "Panel Principal", path: "/admin" },
@@ -9,10 +10,12 @@ const navItems = [
   { icon: Pill, label: "Ventas y Servicios", path: "/admin/ventas" },
   { icon: BarChart3, label: "Reportes", path: "/admin/reportes" },
   { icon: Settings, label: "Configuración", path: "/admin/configuracion" },
+  { icon: User, label: "Mi Perfil", path: "/admin/perfil" },
 ];
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-sidebar-background min-h-screen">
@@ -27,7 +30,8 @@ const AdminSidebar = () => {
             <Shield className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-sidebar-foreground">Administrador</p>
+            <p className="text-sm font-semibold text-sidebar-foreground">{user?.nombre || "Administrador"}</p>
+            <p className="text-xs text-muted-foreground">Administrador</p>
           </div>
         </div>
       </div>

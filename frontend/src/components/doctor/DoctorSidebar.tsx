@@ -1,6 +1,7 @@
-import { Activity, CalendarDays, Stethoscope, Pill, FileText, Package, Home, LogOut, User } from "lucide-react";
+import { Activity, CalendarDays, Stethoscope, Pill, FileText, Package, Home, LogOut, User, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/authContext";
 
 const navItems = [
   { icon: Home, label: "Panel Principal", path: "/medico" },
@@ -9,10 +10,12 @@ const navItems = [
   { icon: Stethoscope, label: "Diagnósticos", path: "/medico/diagnosticos" },
   { icon: Pill, label: "Recetas", path: "/medico/recetas" },
   { icon: Package, label: "Medicamentos", path: "/medico/medicamentos" },
+  { icon: Settings, label: "Mi Perfil", path: "/medico/perfil" },
 ];
 
 const DoctorSidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-sidebar-background min-h-screen">
@@ -27,10 +30,8 @@ const DoctorSidebar = () => {
             <Stethoscope className="w-5 h-5 text-primary" />
           </div>
           <div>
-            {/*Agregar el nombre del medico*/}
-            <p className="text-sm font-semibold text-sidebar-foreground">Médico</p>
-            {/*Agregar la especialidad del medico*/}
-            
+            <p className="text-sm font-semibold text-sidebar-foreground">{user?.nombre || "Médico"}</p>
+            <p className="text-xs text-muted-foreground">{user?.especialidad || "Médico"}</p>
           </div>
         </div>
       </div>
