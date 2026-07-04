@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { login, getProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/authContext";
 import "./auth.css";
@@ -11,6 +12,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { setUser } = useAuth();
   const navigate = useNavigate();
