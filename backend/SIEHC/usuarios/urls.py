@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     PacienteViewSet, MedicoViewSet, AdministradorViewSet,
     LoginView, RegisterView, ProfileView, ProfilePhotoView,
-    NotificacionPreferenciaView, UsuarioListView
+    NotificacionPreferenciaView, UsuarioListView, ActividadRecienteView
 )
 from .views import toggle_activo
 
@@ -21,5 +21,6 @@ urlpatterns = [
     path('profile/photo/', ProfilePhotoView.as_view()),
     path('profile/notificaciones/', NotificacionPreferenciaView.as_view()),
     path('admin/usuarios/', UsuarioListView.as_view()),
+    path('actividad/reciente/', ActividadRecienteView.as_view()),
     path('<int:pk>/toggle-activo/', toggle_activo),
 ]
