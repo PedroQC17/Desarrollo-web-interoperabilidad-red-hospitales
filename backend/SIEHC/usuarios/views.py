@@ -150,6 +150,61 @@ class NotificacionPreferenciaView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ActividadRecienteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        actividades = []
+
+        for c in Cita.objects.select_related('paciente__usuario', 'medico__usuario').order_by('-creado_en')[:5]:
+            nombre = c.paciente.usuario.nombre if c.paciente else "—"
+            actividades.append({
+                "action": f"{nombre} solicitó una cita",
+                "detail": f"{c.especialidad} - {dict(Cita.ESTADO_CHOICES).get(c.estado, c.estado)}",
+                "time": c.creado_en.isoformat(),
+                "type": "cita",
+            })
+
+        for d in Despacho.objects.select_related('cita__paciente__usuario').order_by('-fecha_despacho')[:5]:
+            nombre = d.cita.paciente.usuario.nombre if d.cita and d.cita.paciente else "—"
+            actividades.append({
+                "action": f"Medicamentos despachados a {nombre}",
+                "detail": f"Cita #{d.cita_id} - S/ {float(d.total):.2f}",
+                "time": d.fecha_despacho.isoformat(),
+                "type": "despacho",
+            })
+
+        for f in Facturacion.objects.select_related('cita__paciente__usuario').filter(estado_pago='pagado').order_by('-fecha_emitida')[:5]:
+            nombre = f.cita.paciente.usuario.nombre if f.cita and f.cita.paciente else "—"
+            actividades.append({
+                "action": f"Pago registrado de {nombre}",
+                "detail": f"S/ {float(f.monto_total):.2f} - {f.descripcion[:60]}",
+                "time": f.fecha_emitida.isoformat(),
+                "type": "pago",
+            })
+
+        for h in Hospital.objects.order_by('-creado_en')[:5]:
+            accion = "afiliado a la red" if h.activo else "desafiliado de la red"
+            actividades.append({
+                "action": f"Hospital {h.nombre} {accion}",
+                "detail": h.ubicacion,
+                "time": h.creado_en.isoformat(),
+                "type": "hospital",
+            })
+
+        for m in Mensaje.objects.select_related('paciente__usuario').order_by('-fecha_hora')[:5]:
+            nombre = m.paciente.usuario.nombre if m.paciente else "—"
+            actividades.append({
+                "action": f"{nombre} envió un mensaje",
+                "detail": m.contenido[:80],
+                "time": m.fecha_hora.isoformat(),
+                "type": "mensaje",
+            })
+
+        actividades.sort(key=lambda a: a["time"], reverse=True)
+        return Response(actividades[:10])
+
+
 #  REGISTER
 class RegisterView(APIView):
     permission_classes = [AllowAny]
