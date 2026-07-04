@@ -321,7 +321,7 @@ const AdminUsuarios = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Contraseña</label>
-                <Input type="password" placeholder="Mín 8, máx 15, incluye letras y números" value={form.password}
+                <Input type={showPassword ? "text" : "password"} placeholder="Mín 8, máx 15, incluye letras y números" value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   maxLength={15} />
               </div>
