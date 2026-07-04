@@ -34,6 +34,39 @@ export const logout = () => {
 };
 
 // Renueva el access token usando el refresh token
+export const updateProfile = async (data: Record<string, any>) => {
+  return api("/usuarios/profile/", {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+};
+
+export const uploadProfilePhoto = async (file: File) => {
+  const formData = new FormData();
+  formData.append("foto", file);
+  return api("/usuarios/profile/photo/", {
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const deleteProfilePhoto = async () => {
+  return api("/usuarios/profile/photo/", {
+    method: "DELETE",
+  });
+};
+
+export const getNotifPrefs = async () => {
+  return api("/usuarios/profile/notificaciones/");
+};
+
+export const updateNotifPrefs = async (data: Record<string, boolean>) => {
+  return api("/usuarios/profile/notificaciones/", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+};
+
 export const refreshAccessToken = async (): Promise<string | null> => {
   const refresh = localStorage.getItem("refresh");
   if (!refresh) return null;

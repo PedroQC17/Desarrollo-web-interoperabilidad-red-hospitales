@@ -3,9 +3,19 @@ import { getProfile } from "./auth";
 import { hideGlobalLoader } from "./loader";
 
 type User = {
+  id: number;
   email: string;
   nombre: string;
+  telecom: string;
+  genero: string;
+  fec_nac: string;
   tipo_usuario: "paciente" | "medico" | "admin";
+  foto?: string | null;
+  direccion?: string;
+  estado_civil?: string;
+  idioma_preferido?: string;
+  especialidad?: string;
+  hospital_id?: number;
 };
 
 type AuthContextType = {
