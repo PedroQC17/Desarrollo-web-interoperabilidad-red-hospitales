@@ -35,6 +35,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     telecom = models.CharField(max_length=20)
     genero = models.CharField(max_length=10)
     fec_nac = models.DateField()
+    foto = models.ImageField(upload_to='fotos_perfil/', null=True, blank=True)
 
     tipo_usuario = models.CharField(max_length=20, choices=TIPO_USUARIO)
 
@@ -94,3 +95,18 @@ class Administrador(models.Model):
 
     def __str__(self):
         return self.usuario.nombre
+
+
+class NotificacionPreferencia(models.Model):
+    usuario = models.OneToOneField(
+        Usuario, on_delete=models.CASCADE, related_name='notif_prefs'
+    )
+    alerta_stock_bajo = models.BooleanField(default=True)
+    reportes_automaticos = models.BooleanField(default=True)
+    aprobacion_usuarios = models.BooleanField(default=True)
+    alertas_email = models.BooleanField(default=False)
+    recordatorio_citas = models.BooleanField(default=True)
+    resultados_historial = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Notificaciones - {self.usuario.email}"
