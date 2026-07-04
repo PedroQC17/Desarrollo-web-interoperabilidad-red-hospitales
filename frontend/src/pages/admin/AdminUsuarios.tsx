@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Users, Search, UserPlus, Trash2, Shield, Stethoscope, User as UserIcon, X } from "lucide-react";
+import { Users, Search, UserPlus, Trash2, Shield, Stethoscope, User as UserIcon, X, Eye, EyeOff } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -41,6 +41,7 @@ const AdminUsuarios = () => {
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState<NuevoUsuario>({
     nombre: "", email: "", password: "", telecom: "",
     genero: "", fec_nac: "", tipo_usuario: "",
