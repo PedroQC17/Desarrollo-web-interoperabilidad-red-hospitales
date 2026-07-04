@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pill, Plus, Calendar, User, Loader2, AlertCircle, Download } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Pill, Plus, Calendar, User, Loader2, AlertCircle, Download, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import config from "@/config/env";
 
 interface Receta {
@@ -57,6 +58,10 @@ const DoctorRecetas = () => {
   const [instruccionDosis, setInstruccionDosis] = useState("");
   const [periodoDosis, setPeriodoDosis] = useState("");
   const [cantidadSuministrada, setCantidadSuministrada] = useState<number | "">("");
+
+  // Preview
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewPayload, setPreviewPayload] = useState<any>(null);
 
   const fetchCitas = async () => {
     setLoading(true);
@@ -120,65 +125,44 @@ const DoctorRecetas = () => {
     }
   }, [selectedCita]);
 
-  const handleSubmit = async () => {
-    setError(null);
-    setSuccess(null);
-
-    if (!selectedCita) {
-      setError("Debes seleccionar una cita");
-      return;
-    }
-    if (!medicamentoId) {
-      setError("Debes seleccionar un medicamento");
-      return;
-    }
-    if (!intencion) {
-      setError("La intención es obligatoria");
-      return;
-    }
-    if (!categoria) {
-      setError("La categoría es obligatoria");
-      return;
-    }
-    if (!prioridad) {
-      setError("La prioridad es obligatoria");
-      return;
-    }
-    if (!instruccionDosis) {
-      setError("Las instrucciones de dosis son obligatorias");
-      return;
-    }
-    if (cantidadSuministrada === "" || cantidadSuministrada === 0) {
-      setError("La cantidad es obligatoria");
-      return;
-    }
-
-    const payload = {
+  const buildPayload = () => {
+    if (!selectedCita) { setError("Debes seleccionar una cita"); return null; }
+    if (!medicamentoId) { setError("Debes seleccionar un medicamento"); return null; }
+    if (!intencion) { setError("La intención es obligatoria"); return null; }
+    if (!categoria) { setError("La categoría es obligatoria"); return null; }
+    if (!prioridad) { setError("La prioridad es obligatoria"); return null; }
+    if (!instruccionDosis) { setError("Las instrucciones de dosis son obligatorias"); return null; }
+    if (cantidadSuministrada === "" || cantidadSuministrada === 0) { setError("La cantidad es obligatoria"); return null; }
+    return {
       medicamento: parseInt(medicamentoId),
-      intencion,
-      categoria,
-      prioridad,
+      intencion, categoria, prioridad,
       instruccion_dosis: instruccionDosis,
       periodo_dosis: periodoDosis || "Según indicaciones",
       cantidad_suministrada: Number(cantidadSuministrada),
     };
+  };
 
+  const handlePreview = () => {
+    setError(null);
+    const payload = buildPayload();
+    if (!payload) return;
+    setPreviewPayload(payload);
+    setShowPreview(true);
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    setSuccess(null);
     setSubmitting(true);
     try {
       await api(`/citas/${selectedCita}/receta/`, {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(previewPayload),
       });
       setSuccess("Receta emitida correctamente");
-      // Clear form
-      setMedicamentoId("");
-      setIntencion("");
-      setCategoria("");
-      setPrioridad("");
-      setInstruccionDosis("");
-      setPeriodoDosis("");
-      setCantidadSuministrada("");
-      // Reload recetas
+      setShowPreview(false);
+      setMedicamentoId(""); setIntencion(""); setCategoria(""); setPrioridad("");
+      setInstruccionDosis(""); setPeriodoDosis(""); setCantidadSuministrada("");
       fetchRecetas(selectedCita);
     } catch (err: any) {
       setError(err?.error || "Error al emitir receta");
@@ -351,13 +335,86 @@ const DoctorRecetas = () => {
                   </div>
 
                   <Button
-                    onClick={handleSubmit}
-                    disabled={submitting}
+                    onClick={handlePreview}
                     className="w-full gap-2"
                   >
-                    {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {submitting ? "Emitiendo..." : "Emitir Receta"}
+                    <Eye className="w-4 h-4" />
+                    Vista Previa de Receta
                   </Button>
+
+                  <Dialog open={showPreview} onOpenChange={setShowPreview}>
+                    <DialogContent className="sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                          <Pill className="w-5 h-5 text-primary" />
+                          Vista Previa de Receta
+                        </DialogTitle>
+                      </DialogHeader>
+                      {previewPayload && (
+                        <div className="space-y-4 py-2">
+                          <div className="border border-border/80 rounded-xl bg-secondary/5 p-5 space-y-3">
+                            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                              <div>
+                                <p className="text-sm font-bold text-foreground">
+                                  {medicamentos.find((m) => m.id === previewPayload.medicamento)?.nombre || "Medicamento"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  Stock disponible: {medicamentos.find((m) => m.id === previewPayload.medicamento)?.stock || 0}
+                                </p>
+                              </div>
+                              <Badge className="capitalize">{previewPayload.categoria}</Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Intención / Propósito</p>
+                                <p className="font-medium text-foreground">{previewPayload.intencion}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Prioridad</p>
+                                <Badge variant="outline" className="capitalize">{previewPayload.prioridad}</Badge>
+                              </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Instrucción de Dosis</p>
+                                <p className="font-medium text-foreground">{previewPayload.instruccion_dosis}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-muted-foreground">Período de Dosis</p>
+                                <p className="font-medium text-foreground">{previewPayload.periodo_dosis}</p>
+                              </div>
+                            </div>
+
+                            <div className="bg-primary/5 rounded-lg p-3 flex items-center justify-between">
+                              <div>
+                                <p className="text-xs text-muted-foreground">Cantidad a Suministrar</p>
+                                <p className="text-lg font-bold text-foreground">{previewPayload.cantidad_suministrada} unidades</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground">Costo unitario</p>
+                                <p className="text-sm font-semibold text-foreground">
+                                  S/ {Number(medicamentos.find((m) => m.id === previewPayload.medicamento)?.costo || 0).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setShowPreview(false)}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
+                          {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                          {submitting ? "Emitiendo..." : "Confirmar y Emitir"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
             </CardContent>
