@@ -101,13 +101,16 @@ function Login() {
             </div>
             <div className="auth-field">
               <label>Contraseña</label>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={handleKeyDown}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  style={{ paddingRight: "40px", width: "100%" }}
+                />
+            </div>
             </div>
           </div>
 
