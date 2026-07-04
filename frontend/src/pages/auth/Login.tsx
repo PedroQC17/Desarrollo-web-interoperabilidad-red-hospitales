@@ -102,7 +102,7 @@ function Login() {
             <div className="auth-field">
               <label>Contraseña</label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
