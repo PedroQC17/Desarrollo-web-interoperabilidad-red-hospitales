@@ -4,12 +4,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from .models import Usuario, Paciente, Medico, Administrador
+from .models import Usuario, Paciente, Medico, Administrador, NotificacionPreferencia
 from .serializers import (
     PacienteSerializer,
     MedicoSerializer,
     AdministradorSerializer,
-    UsuarioListSerializer
+    UsuarioListSerializer,
+    ProfileUpdateSerializer,
+    ProfilePhotoSerializer,
+    NotificacionPreferenciaSerializer
 )
 from .serializers import RegisterSerializer, LoginSerializer
 
@@ -61,11 +64,84 @@ class ProfileView(APIView):
 
     def get(self, request):
         user = request.user
-        return Response({
+        data = {
+            "id": user.id,
             "email": user.email,
             "nombre": user.nombre,
-            "tipo_usuario": user.tipo_usuario
-        })
+            "telecom": user.telecom,
+            "genero": user.genero,
+            "fec_nac": user.fec_nac,
+            "tipo_usuario": user.tipo_usuario,
+            "foto": request.build_absolute_uri(user.foto.url) if user.foto else None,
+        }
+        try:
+            p = user.paciente
+            data.update({
+                "direccion": p.direccion,
+                "estado_civil": p.estado_civil,
+                "idioma_preferido": p.idioma_preferido,
+            })
+        except Paciente.DoesNotExist:
+            pass
+        try:
+            m = user.medico
+            data.update({
+                "especialidad": m.especialidad,
+                "hospital_id": m.hospital_id,
+            })
+        except Medico.DoesNotExist:
+            pass
+        return Response(data)
+
+    def put(self, request):
+        serializer = ProfileUpdateSerializer(request.user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        serializer = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProfilePhotoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ProfilePhotoSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            foto_url = request.build_absolute_uri(request.user.foto.url) if request.user.foto else None
+            return Response({"foto": foto_url})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        if request.user.foto:
+            request.user.foto.delete(save=False)
+            request.user.foto = None
+            request.user.save()
+        return Response({"foto": None})
+
+
+class NotificacionPreferenciaView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        pref, _ = NotificacionPreferencia.objects.get_or_create(usuario=request.user)
+        serializer = NotificacionPreferenciaSerializer(pref)
+        return Response(serializer.data)
+
+    def put(self, request):
+        pref, _ = NotificacionPreferencia.objects.get_or_create(usuario=request.user)
+        serializer = NotificacionPreferenciaSerializer(pref, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #  REGISTER
 class RegisterView(APIView):
