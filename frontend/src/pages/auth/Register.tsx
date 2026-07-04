@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { register, getProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/authContext";
 import { useNavigate } from "react-router-dom";
@@ -111,6 +112,7 @@ function Register() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading]         = useState(false);
   const [errors, setErrors]           = useState<FormErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState<FormFields>({
     email: "",
@@ -254,15 +256,26 @@ function Register() {
             {/* Contraseña */}
             <div className="auth-field auth-field-full">
               <label>Contraseña</label>
-              <input
-                name="password"
-                type="password"
-                placeholder="Mínimo 8 caracteres, incluye letras y números"
-                value={form.password}
-                onChange={handleChange}
-                maxLength={15}
-                className={errors.password ? "input-error" : ""}
-              />
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Mínimo 8 caracteres, incluye letras y números"
+                  value={form.password}
+                  onChange={handleChange}
+                  maxLength={15}
+                  style={{ paddingRight: "40px" }}
+                  className={errors.password ? "input-error" : ""}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((p) => !p)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               {errors.password && <span className="field-error">{errors.password}</span>}
             </div>
 
