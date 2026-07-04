@@ -22,6 +22,7 @@ import PatientCitas from "./pages/patient/PatientCitas.tsx";
 import PatientConsentimiento from "./pages/patient/PatientConsentimiento.tsx";
 import PatientFacturacion from "./pages/patient/PatientFacturacion.tsx";
 import PatientSoporte from "./pages/patient/PatientSoporte.tsx";
+import Perfil from "./pages/Perfil.tsx";
 
 import DoctorLayout from "./layouts/DoctorLayout.tsx";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard.tsx";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="consentimiento" element={<PatientConsentimiento />} />
               <Route path="facturacion" element={<PatientFacturacion />} />
               <Route path="soporte" element={<PatientSoporte />} />
+              <Route path="perfil" element={<Perfil />} />
             </Route>
 
             {/* Médico */}
@@ -79,6 +81,7 @@ const App = () => (
               <Route path="recetas" element={<DoctorRecetas />} />
               <Route path="medicamentos" element={<DoctorMedicamentos />} />
               <Route path="atencion/:citaId" element={<DoctorAtencion />} />
+              <Route path="perfil" element={<Perfil />} />
             </Route>
 
             {/* Admin */}
@@ -91,6 +94,7 @@ const App = () => (
               <Route path="ventas" element={<AdminVentas />} />
               <Route path="reportes" element={<AdminReportes />} />
               <Route path="configuracion" element={<AdminConfiguracion />} />
+              <Route path="perfil" element={<Perfil />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
