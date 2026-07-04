@@ -1,40 +1,45 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Pill, BarChart3, TrendingUp, Activity, Shield } from "lucide-react";
+import { Building2, Users, Pill, BarChart3, TrendingUp, Activity, Shield, MessageCircle, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/authContext";
 
-const stats = [
-  { label: "Hospitales en Red", value: "12", icon: Building2, color: "text-primary", trend: "+2 este mes" },
-  { label: "Usuarios Activos", value: "3,482", icon: Users, color: "text-accent", trend: "+12% mensual" },
-  { label: "Ventas del Mes", value: "S/ 84,520", icon: Pill, color: "text-green-600", trend: "+8% vs anterior" },
-  { label: "Citas Atendidas", value: "1,256", icon: Activity, color: "text-orange-500", trend: "Esta semana" },
-];
+interface Stat {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  color: string;
+  trend: string;
+}
 
-const quickActions = [
-  { label: "Gestionar Hospitales", path: "/admin/hospitales", icon: Building2 },
-  { label: "Administrar Usuarios", path: "/admin/usuarios", icon: Users },
-  { label: "Ver Reportes", path: "/admin/reportes", icon: BarChart3 },
-  { label: "Ventas y Servicios", path: "/admin/ventas", icon: Pill },
-];
+interface HospitalRanking {
+  name: string;
+  total_citas: number;
+  total_medicos: number;
+}
 
-const recentActivity = [
-  { action: "Nuevo hospital registrado", detail: "Hospital San Juan de Dios", time: "Hace 2h", type: "hospital" },
-  { action: "Médico aprobado", detail: "Dr. Carlos García - Cardiología", time: "Hace 4h", type: "user" },
-  { action: "Reporte mensual generado", detail: "Octubre 2025 - Ventas", time: "Hace 6h", type: "report" },
-  { action: "Servicio actualizado", detail: "Tarifa de Consulta Externa", time: "Ayer", type: "service" },
-  { action: "Usuario suspendido", detail: "Acceso revocado por inactividad", time: "Hace 2 días", type: "user" },
-];
+interface ActivityItem {
+  action: string;
+  detail: string;
+  time: string;
+  type: string;
+}
 
-const topHospitals = [
-  { name: "Hospital Nacional Loayza", patients: 542, growth: "+12%" },
-  { name: "Hospital Almenara", patients: 478, growth: "+8%" },
-  { name: "Hospital Rebagliati", patients: 421, growth: "+15%" },
-  { name: "Hospital Cayetano Heredia", patients: 389, growth: "+6%" },
-];
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+  cita: { icon: Activity, color: "text-primary" },
+  despacho: { icon: Pill, color: "text-green-600" },
+  pago: { icon: DollarSign, color: "text-emerald-600" },
+  hospital: { icon: Building2, color: "text-accent" },
+  mensaje: { icon: MessageCircle, color: "text-orange-500" },
+};
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+
+  const [stats] = useState<Stat[]>([]);
+  const [activities] = useState<ActivityItem[]>([]);
+  const [topHospitals] = useState<HospitalRanking[]>([]);
 
   return (
     <div className="space-y-8">
@@ -61,6 +66,11 @@ const AdminDashboard = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.length === 0 && (
+          <div className="col-span-4 text-center py-8 text-sm text-muted-foreground">
+            Cargando estadísticas...
+          </div>
+        )}
         {stats.map((stat) => (
           <Card key={stat.label} className="border-border">
             <CardContent className="p-5">
@@ -85,25 +95,30 @@ const AdminDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((item, i) => (
-                <div key={i} className="flex items-start justify-between pb-4 border-b border-border last:border-0 last:pb-0">
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      {item.type === "hospital" && <Building2 className="w-4 h-4 text-primary" />}
-                      {item.type === "user" && <Users className="w-4 h-4 text-primary" />}
-                      {item.type === "report" && <BarChart3 className="w-4 h-4 text-primary" />}
-                      {item.type === "service" && <Pill className="w-4 h-4 text-primary" />}
+            {activities.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Cargando actividad...</p>
+            ) : (
+              <div className="space-y-4">
+                {activities.map((item, i) => {
+                  const cfg = TYPE_CONFIG[item.type] || { icon: Activity, color: "text-primary" };
+                  const Icon = cfg.icon;
+                  return (
+                    <div key={i} className="flex items-start justify-between pb-4 border-b border-border last:border-0 last:pb-0">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Icon className={`w-4 h-4 ${cfg.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{item.action}</p>
+                          <p className="text-xs text-muted-foreground">{item.detail}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{item.time}</span>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{item.action}</p>
-                      <p className="text-xs text-muted-foreground">{item.detail}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{item.time}</span>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -113,7 +128,12 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action) => (
+              {[
+                { label: "Gestionar Hospitales", path: "/admin/hospitales", icon: Building2 },
+                { label: "Administrar Usuarios", path: "/admin/usuarios", icon: Users },
+                { label: "Ver Reportes", path: "/admin/reportes", icon: BarChart3 },
+                { label: "Ventas y Servicios", path: "/admin/ventas", icon: Pill },
+              ].map((action) => (
                 <Link
                   key={action.path}
                   to={action.path}
@@ -136,22 +156,26 @@ const AdminDashboard = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {topHospitals.map((h, i) => (
-              <div key={i} className="flex items-center justify-between pb-4 border-b border-border last:border-0 last:pb-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
-                    {i + 1}
+          {topHospitals.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Cargando hospitales...</p>
+          ) : (
+            <div className="space-y-4">
+              {topHospitals.map((h, i) => (
+                <div key={i} className="flex items-center justify-between pb-4 border-b border-border last:border-0 last:pb-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+                      {i + 1}
+                    </div>
+                    <p className="text-sm font-medium text-foreground">{h.name}</p>
                   </div>
-                  <p className="text-sm font-medium text-foreground">{h.name}</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-muted-foreground">{h.total_citas} citas</span>
+                    <Badge variant="secondary" className="text-xs">{h.total_medicos} médicos</Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">{h.patients} pacientes</span>
-                  <Badge variant="secondary" className="text-xs">{h.growth}</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
