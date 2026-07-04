@@ -321,9 +321,12 @@ const AdminUsuarios = () => {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Contraseña</label>
-                <Input type={showPassword ? "text" : "password"} placeholder="Mín 8, máx 15, incluye letras y números" value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  maxLength={15} />
+                <div className="relative">
+                  <Input type={showPassword ? "text" : "password"} placeholder="Mín 8, máx 15, incluye letras y números" value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    maxLength={15}
+                    style={{ paddingRight: "40px" }} />
+                </div>
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Teléfono</label>
