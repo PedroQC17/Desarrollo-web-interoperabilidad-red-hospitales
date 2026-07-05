@@ -15,7 +15,7 @@ try:
         address="127.0.0.1",
         port=int(os.getenv("PORT", "8003")),
         check=consul.Check.http(
-            "http://127.0.0.1:" + os.getenv("PORT", "8003") + "/health/",
+            "http://127.0.0.1:" + os.getenv("PORT", "8003") + "/api/medicos/health/",
             interval="10s",
         ),
     )
