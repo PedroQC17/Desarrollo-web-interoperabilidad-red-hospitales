@@ -1,6 +1,6 @@
 {
   "datacenter": "dc1",
-  "data_dir": "C:/Users/DANIEL/Documents/PROYECTO_DSW_FINAL/Desarrollo-web-interoperabilidad-red-hospitales/microservicios/infraestructura/consul/data",
+  "data_dir": "../data",
   "log_level": "INFO",
   "server": true,
   "bootstrap": true,

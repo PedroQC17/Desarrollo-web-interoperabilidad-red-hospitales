@@ -11,6 +11,18 @@ Write-Host "  Iniciando todos los microservicios" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
+# ── 0. Instalar dependencias ────────────────────────
+Write-Host "[0/6] Verificando dependencias..." -ForegroundColor Yellow
+$deps = @("django", "djangorestframework", "django-cors-headers", "httpx", "python-consul2", "pyyaml", "fastapi", "uvicorn", "pyjwt")
+foreach ($dep in $deps) {
+    $installed = python -c "import $($dep -replace '-','_')" 2>&1 | Out-Null
+    if (-not $?) {
+        Write-Host "  Instalando $dep..." -ForegroundColor Gray
+        pip install $dep 2>&1 | Out-Null
+    }
+}
+Write-Host "  Dependencias listas." -ForegroundColor Green
+
 # ── 1. Consul ────────────────────────────────────────
 Write-Host "[1/6] Iniciando Consul (puerto 8500)..." -ForegroundColor Yellow
 $ConsulJob = Start-Job -ScriptBlock {
@@ -19,10 +31,12 @@ $ConsulJob = Start-Job -ScriptBlock {
     $consul = Join-Path $dir "infraestructura\consul\consul.exe"
     $dataDir = Join-Path $dir "infraestructura\consul\data"
     New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
-    $env:CONSUL_DATA_DIR = $dataDir
     & $consul agent -dev -ui -bind 127.0.0.1 -data-dir $dataDir 2>&1 | Out-File $log
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  ERROR: Consul falló. Revisa $log" -ForegroundColor Red
+    }
 } -ArgumentList $Root
-Start-Sleep -Seconds 3
+Start-Sleep -Seconds 4
 
 # ── 2. Config Server ─────────────────────────────────
 Write-Host "[2/6] Iniciando Config Server (puerto 8888)..." -ForegroundColor Yellow
@@ -40,6 +54,7 @@ $AuthJob = Start-Job -ScriptBlock {
     param($dir)
     $log = Join-Path $dir "logs\auth-service.log"
     Set-Location (Join-Path $dir "auth-service")
+    $env:PORT = "8001"
     python manage.py runserver 0.0.0.0:8001 2>&1 | Out-File $log
 } -ArgumentList $Root
 Start-Sleep -Seconds 2
@@ -63,6 +78,7 @@ foreach ($svc in $services) {
         param($d, $p, $name, $logDir)
         $log = Join-Path $logDir "$name.log"
         Set-Location $d
+        $env:PORT = "$p"
         python manage.py runserver 0.0.0.0:$p 2>&1 | Out-File $log
     } -ArgumentList (Join-Path $Root $svc.Dir), $svc.Port, $svc.Name.ToLower(), $LogDir
     $ServiceJobs += $job
@@ -76,6 +92,7 @@ $GatewayJob = Start-Job -ScriptBlock {
     param($dir)
     $log = Join-Path $dir "logs\gateway.log"
     Set-Location (Join-Path $dir "infraestructura\gateway")
+    $env:PORT = "8000"
     python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload 2>&1 | Out-File $log
 } -ArgumentList $Root
 Start-Sleep -Seconds 2
@@ -97,6 +114,9 @@ Write-Host "  Facturacion:     http://localhost:8006" -ForegroundColor Cyan
 Write-Host "  Soporte:         http://localhost:8007" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Logs en: $LogDir" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  Si en Consul no aparecen los servicios, revisa los logs:"
+Write-Host "  Get-Content $LogDir\*.log" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Para detener: Get-Job | Stop-Job" -ForegroundColor Magenta
 Write-Host ""
