@@ -1,0 +1,19 @@
+server:
+  port: 8005
+  name: medicamentos-service
+
+database:
+  engine: django.db.backends.postgresql
+  name: db_medicamentos
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
+
+services:
+  auth: "http://localhost:8001"
+  medicos: "http://localhost:8003"
+
+consul:
+  host: localhost
+  port: 8500

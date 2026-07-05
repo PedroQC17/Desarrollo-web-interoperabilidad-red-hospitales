@@ -1,0 +1,12 @@
+server:
+  port: 8000
+  name: api-gateway
+
+services:
+  auth: "http://localhost:8001"
+  pacientes: "http://localhost:8002"
+  medicos: "http://localhost:8003"
+  citas: "http://localhost:8004"
+  medicamentos: "http://localhost:8005"
+  facturacion: "http://localhost:8006"
+  soporte: "http://localhost:8007"

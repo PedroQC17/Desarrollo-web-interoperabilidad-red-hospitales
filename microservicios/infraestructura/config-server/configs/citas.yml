@@ -1,0 +1,22 @@
+server:
+  port: 8004
+  name: citas-service
+
+database:
+  engine: django.db.backends.postgresql
+  name: db_citas
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
+
+services:
+  auth: "http://localhost:8001"
+  pacientes: "http://localhost:8002"
+  medicos: "http://localhost:8003"
+  medicamentos: "http://localhost:8005"
+  facturacion: "http://localhost:8006"
+
+consul:
+  host: localhost
+  port: 8500

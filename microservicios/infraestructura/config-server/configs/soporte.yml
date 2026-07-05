@@ -1,0 +1,18 @@
+server:
+  port: 8007
+  name: soporte-service
+
+database:
+  engine: django.db.backends.postgresql
+  name: db_soporte
+  user: postgres
+  password: postgres
+  host: localhost
+  port: 5432
+
+services:
+  auth: "http://localhost:8001"
+
+consul:
+  host: localhost
+  port: 8500
