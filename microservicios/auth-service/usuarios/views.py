@@ -22,6 +22,8 @@ class RegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
+        refresh["email"] = user.email
+        refresh["tipo_usuario"] = user.tipo_usuario
         return Response(
             {
                 "user": UsuarioSerializer(user).data,
@@ -44,6 +46,8 @@ class LoginView(APIView):
         if not user.is_active:
             return Response({"error": "Usuario desactivado"}, status=status.HTTP_403_FORBIDDEN)
         refresh = RefreshToken.for_user(user)
+        refresh["email"] = user.email
+        refresh["tipo_usuario"] = user.tipo_usuario
         return Response(
             {
                 "user": UsuarioSerializer(user).data,
@@ -62,7 +66,10 @@ class RefreshView(APIView):
             return Response({"error": "Refresh token requerido"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             refresh = RefreshToken(refresh_token)
-            return Response({"access": str(refresh.access_token)})
+            access = refresh.access_token
+            access["email"] = refresh.get("email", "")
+            access["tipo_usuario"] = refresh.get("tipo_usuario", "")
+            return Response({"access": str(access)})
         except Exception:
             return Response({"error": "Refresh token inválido"}, status=status.HTTP_401_UNAUTHORIZED)
 
