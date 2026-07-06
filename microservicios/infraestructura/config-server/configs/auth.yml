@@ -7,7 +7,7 @@ database:
   name: db_auth
   user: postgres
   password: postgres
-  host: localhost
+  host: postgres-auth
   port: 5432
 
 jwt:
@@ -16,5 +16,5 @@ jwt:
   expiration_minutes: 60
 
 consul:
-  host: localhost
+  host: consul
   port: 8500

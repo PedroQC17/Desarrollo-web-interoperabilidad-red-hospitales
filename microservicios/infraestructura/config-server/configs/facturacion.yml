@@ -7,13 +7,13 @@ database:
   name: db_facturacion
   user: root
   password: root
-  host: localhost
+  host: mysql-facturacion
   port: 3307
 
 services:
-  auth: "http://localhost:8001"
-  citas: "http://localhost:8004"
+  auth: "http://auth-service:8001"
+  citas: "http://citas-service:8004"
 
 consul:
-  host: localhost
+  host: consul
   port: 8500

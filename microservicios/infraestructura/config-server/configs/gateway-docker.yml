@@ -1,22 +1,12 @@
 server:
-  port: 8004
-  name: citas-service
-
-database:
-  engine: django.db.backends.mysql
-  name: db_citas
-  user: root
-  password: root
-  host: mysql-citas
-  port: 3306
+  port: 8000
+  name: api-gateway
 
 services:
   auth: "http://auth-service:8001"
   pacientes: "http://pacientes-service:8002"
   medicos: "http://medicos-service:8003"
+  citas: "http://citas-service:8004"
   medicamentos: "http://medicamentos-service:8005"
   facturacion: "http://facturacion-service:8006"
-
-consul:
-  host: consul
-  port: 8500
+  soporte: "http://soporte-service:8007"

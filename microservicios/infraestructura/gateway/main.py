@@ -54,13 +54,14 @@ def get_jwt_secret():
 # ── Registrar en Consul ──────────────────────────────
 def register_consul():
     try:
+        addr = os.getenv("CONSUL_ADDRESS", "127.0.0.1")
         c = consul.Consul(host=CONSUL_HOST, port=CONSUL_PORT)
         c.agent.service.register(
             name="api-gateway",
             service_id="api-gateway-1",
-            address="127.0.0.1",
+            address=addr,
             port=GATEWAY_PORT,
-            check=consul.Check.http(f"http://127.0.0.1:{GATEWAY_PORT}/health/", interval="10s"),
+            check=consul.Check.http(f"http://{addr}:{GATEWAY_PORT}/health/", interval="10s"),
         )
     except Exception:
         pass

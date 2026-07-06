@@ -11,8 +11,8 @@ database:
   port: 5432
 
 services:
-  auth: "http://localhost:8001"
+  auth: "http://auth-service:8001"
 
 consul:
-  host: localhost
+  host: consul
   port: 8500

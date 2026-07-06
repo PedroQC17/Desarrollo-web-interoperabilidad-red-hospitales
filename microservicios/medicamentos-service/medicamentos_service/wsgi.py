@@ -8,14 +8,16 @@ application = get_wsgi_application()
 try:
     import consul
 
+    addr = os.getenv("CONSUL_ADDRESS", "127.0.0.1")
+    port = os.getenv("PORT", "8005")
     consul_client = consul.Consul(host=os.getenv("CONSUL_HOST", "localhost"), port=8500)
     consul_client.agent.service.register(
         name="medicamentos-service",
         service_id="medicamentos-service-1",
-        address="127.0.0.1",
-        port=int(os.getenv("PORT", "8005")),
+        address=addr,
+        port=int(port),
         check=consul.Check.http(
-            "http://127.0.0.1:" + os.getenv("PORT", "8005") + "/api/medicamentos/health/",
+            f"http://{addr}:{port}/api/medicamentos/health/",
             interval="10s",
         ),
     )

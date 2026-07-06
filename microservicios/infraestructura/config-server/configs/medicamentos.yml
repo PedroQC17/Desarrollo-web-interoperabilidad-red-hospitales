@@ -11,9 +11,9 @@ database:
   port: 5432
 
 services:
-  auth: "http://localhost:8001"
-  medicos: "http://localhost:8003"
+  auth: "http://auth-service:8001"
+  medicos: "http://medicos-service:8003"
 
 consul:
-  host: localhost
+  host: consul
   port: 8500
