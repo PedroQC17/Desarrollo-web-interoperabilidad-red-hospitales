@@ -20,6 +20,8 @@ class DespachoItemInputSerializer(serializers.Serializer):
 
 
 class DespachoInputSerializer(serializers.Serializer):
+    paciente_id = serializers.IntegerField()
+    paciente_nombre = serializers.CharField(required=False, allow_blank=True)
     cita_id = serializers.IntegerField()
     items = DespachoItemInputSerializer(many=True)
 

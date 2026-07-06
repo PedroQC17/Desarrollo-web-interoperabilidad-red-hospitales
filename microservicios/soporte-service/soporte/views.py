@@ -69,7 +69,7 @@ def mensaje_list(request):
         if tipo == "paciente":
             qs = qs.filter(paciente_id=user_id)
         elif tipo == "medico":
-            qs = qs.filter(medico_id__isnull=False)
+            qs = qs.filter(medico_id=user_id)
         elif tipo != "admin":
             return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
         serializer = MensajeSerializer(qs, many=True)

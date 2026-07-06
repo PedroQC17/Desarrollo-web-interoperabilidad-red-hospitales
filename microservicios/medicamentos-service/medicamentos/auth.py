@@ -1,6 +1,11 @@
 from rest_framework.authentication import BaseAuthentication
 
 
+class AnonymousUser:
+    is_authenticated = False
+    is_anonymous = True
+
+
 class GatewayUser:
     is_authenticated = True
     is_anonymous = False

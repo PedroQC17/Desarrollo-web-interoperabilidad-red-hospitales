@@ -13,12 +13,22 @@ Write-Host ""
 
 # ── 0. Instalar dependencias ────────────────────────
 Write-Host "[0/6] Verificando dependencias..." -ForegroundColor Yellow
-$deps = @("django", "djangorestframework", "django-cors-headers", "httpx", "python-consul2", "pyyaml", "fastapi", "uvicorn", "pyjwt")
+$deps = @(
+    @{Pkg="django"; Mod="django"},
+    @{Pkg="djangorestframework"; Mod="rest_framework"},
+    @{Pkg="django-cors-headers"; Mod="corsheaders"},
+    @{Pkg="httpx"; Mod="httpx"},
+    @{Pkg="python-consul2"; Mod="consul"},
+    @{Pkg="pyyaml"; Mod="yaml"},
+    @{Pkg="fastapi"; Mod="fastapi"},
+    @{Pkg="uvicorn"; Mod="uvicorn"},
+    @{Pkg="pyjwt"; Mod="jwt"}
+)
 foreach ($dep in $deps) {
-    $installed = python -c "import $($dep -replace '-','_')" 2>&1 | Out-Null
+    $installed = python -c "import $($dep.Mod)" 2>&1 | Out-Null
     if (-not $?) {
-        Write-Host "  Instalando $dep..." -ForegroundColor Gray
-        pip install $dep 2>&1 | Out-Null
+        Write-Host "  Instalando $($dep.Pkg)..." -ForegroundColor Gray
+        pip install $dep.Pkg 2>&1 | Out-Null
     }
 }
 Write-Host "  Dependencias listas." -ForegroundColor Green

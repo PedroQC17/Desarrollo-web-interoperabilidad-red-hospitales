@@ -35,6 +35,8 @@ class Medicamento(models.Model):
 class Despacho(models.Model):
     medico_id = models.IntegerField(verbose_name="ID del médico")
     medico_nombre = models.CharField(max_length=255, blank=True)
+    paciente_id = models.IntegerField(default=0, verbose_name="ID del paciente")
+    paciente_nombre = models.CharField(max_length=255, blank=True)
     cita_id = models.IntegerField(unique=True, verbose_name="ID de la cita")
     fecha_despacho = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)

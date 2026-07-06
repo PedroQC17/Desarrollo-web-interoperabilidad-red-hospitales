@@ -94,6 +94,8 @@ def despachar(request):
     serializer.is_valid(raise_exception=True)
 
     cita_id = serializer.validated_data["cita_id"]
+    paciente_id = serializer.validated_data["paciente_id"]
+    paciente_nombre = serializer.validated_data.get("paciente_nombre", "")
     items_data = serializer.validated_data["items"]
 
     if Despacho.objects.filter(cita_id=cita_id).exists():
@@ -102,6 +104,8 @@ def despachar(request):
     with transaction.atomic():
         despacho = Despacho.objects.create(
             medico_id=_get_id(request),
+            paciente_id=paciente_id,
+            paciente_nombre=paciente_nombre,
             cita_id=cita_id,
         )
 
@@ -149,6 +153,11 @@ def mis_despachos(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def mis_facturas(request):
-    qs = Despacho.objects.prefetch_related("items").all()
+    user_id = _get_id(request)
+    tipo = _get_tipo(request)
+    if tipo == "paciente":
+        qs = Despacho.objects.filter(paciente_id=user_id).prefetch_related("items")
+    else:
+        qs = Despacho.objects.prefetch_related("items").all()
     serializer = DespachoSerializer(qs, many=True)
     return Response(serializer.data)
