@@ -3,12 +3,12 @@ server:
   name: facturacion-service
 
 database:
-  engine: django.db.backends.postgresql
+  engine: django.db.backends.mysql
   name: db_facturacion
-  user: postgres
-  password: postgres
+  user: root
+  password: root
   host: localhost
-  port: 5432
+  port: 3307
 
 services:
   auth: "http://localhost:8001"

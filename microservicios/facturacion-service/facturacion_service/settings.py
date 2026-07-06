@@ -72,12 +72,12 @@ else:
     db = config.get("database", {})
     DATABASES = {
         "default": {
-            "ENGINE": db.get("engine", "django.db.backends.postgresql"),
+            "ENGINE": db.get("engine", "django.db.backends.mysql"),
             "NAME": db.get("name", "db_facturacion"),
-            "USER": db.get("user", "postgres"),
-            "PASSWORD": db.get("password", "postgres"),
+            "USER": db.get("user", "root"),
+            "PASSWORD": db.get("password", "root"),
             "HOST": db.get("host", "localhost"),
-            "PORT": db.get("port", 5432),
+            "PORT": db.get("port", 3307),
         }
     }
 
