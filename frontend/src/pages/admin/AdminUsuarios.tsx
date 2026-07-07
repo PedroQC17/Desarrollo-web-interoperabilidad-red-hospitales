@@ -50,7 +50,7 @@ const AdminUsuarios = () => {
   // ── Cargar usuarios del backend ──────────────────────────────────────────
   const cargarUsuarios = async () => {
     try {
-      const data = await api("/usuarios/admin/usuarios/");
+      const data = await api("/auth/users/");
       setUsuarios(data);
     } catch {
       toast.error("Error al cargar usuarios");
@@ -63,20 +63,10 @@ const AdminUsuarios = () => {
   const toggleEstado = async (u: UsuarioAPI) => {
     setLoadingIds((prev) => [...prev, u.id]);
     try {
-      // Usamos el endpoint de cada rol según tipo_usuario
-      const endpoint =
-        u.tipo_usuario === "paciente" ? `/usuarios/pacientes/${u.id}/` :
-        u.tipo_usuario === "medico"   ? `/usuarios/medicos/${u.id}/` :
-                                        `/usuarios/administradores/${u.id}/`;
-
-      // PATCH sobre el usuario base no existe directo, usamos el usuario
-      await api(`/usuarios/admin/usuarios/`, { method: "GET" }); // solo para verificar token
-
-      await api(`/usuarios/${u.id}/toggle-activo/`, {
+      await api(`/auth/users/${u.id}/toggle-active/`, {
         method: "PATCH",
         body: JSON.stringify({ is_active: !u.is_active }),
       });
-
       setUsuarios((prev) =>
         prev.map((x) => x.id === u.id ? { ...x, is_active: !u.is_active } : x)
       );
@@ -93,11 +83,7 @@ const AdminUsuarios = () => {
     if (!confirm(`¿Eliminar a ${u.nombre}? Esta acción no se puede deshacer.`)) return;
     setLoadingIds((prev) => [...prev, u.id]);
     try {
-      const endpoint =
-        u.tipo_usuario === "paciente" ? `/usuarios/pacientes/${u.id}/` :
-        u.tipo_usuario === "medico"   ? `/usuarios/medicos/${u.id}/` :
-                                        `/usuarios/administradores/${u.id}/`;
-      await api(endpoint, { method: "DELETE" });
+      await api(`/auth/users/${u.id}/`, { method: "DELETE" });
       setUsuarios((prev) => prev.filter((x) => x.id !== u.id));
       toast.success(`${u.nombre} eliminado correctamente`);
     } catch {
@@ -182,10 +168,10 @@ const AdminUsuarios = () => {
     }
     setFormLoading(true);
     try {
-      await api("/usuarios/register/", {
+      await api("/auth/users/create/", {
         method: "POST",
         body: JSON.stringify(form),
-      }, true);
+      });
       toast.success("Usuario creado correctamente");
       setShowForm(false);
       setForm({ nombre: "", email: "", password: "", telecom: "", genero: "", fec_nac: "", tipo_usuario: "" });

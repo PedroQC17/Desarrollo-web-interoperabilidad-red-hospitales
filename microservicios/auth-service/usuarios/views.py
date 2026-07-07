@@ -118,13 +118,53 @@ class UserDetailView(APIView):
         except Usuario.DoesNotExist:
             return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
 
+    def delete(self, request, pk):
+        if getattr(request.user, "tipo_usuario", "") != "admin":
+            return Response({"error": "Solo administradores"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            user = Usuario.objects.get(pk=pk)
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Usuario.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class UserListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         users = Usuario.objects.all().order_by("-fecha_registro")
+        tipo = request.query_params.get("tipo")
+        if tipo:
+            users = users.filter(tipo_usuario=tipo)
         return Response(UsuarioSerializer(users, many=True).data)
+
+
+class UserToggleActiveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        if getattr(request.user, "tipo_usuario", "") != "admin":
+            return Response({"error": "Solo administradores"}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            user = Usuario.objects.get(pk=pk)
+            user.is_active = request.data.get("is_active", not user.is_active)
+            user.save(update_fields=["is_active"])
+            return Response(UsuarioSerializer(user).data)
+        except Usuario.DoesNotExist:
+            return Response({"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class AdminCreateUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if getattr(request.user, "tipo_usuario", "") != "admin":
+            return Response({"error": "Solo administradores"}, status=status.HTTP_403_FORBIDDEN)
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(UsuarioSerializer(user).data, status=status.HTTP_201_CREATED)
 
 
 class ProfilePhotoView(APIView):

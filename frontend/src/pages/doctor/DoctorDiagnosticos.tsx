@@ -245,7 +245,7 @@ const DoctorDiagnosticos = () => {
   const handleDespacharMedicamentos = () => {
     if (despachoItems.length === 0) return setFormError("Debes agregar al menos un medicamento.");
     withSubmit(async () => {
-      await api(`/medicamentos/medicamentos/despachar/${selected!.id}/`, {
+      await api(`/medicamentos/despachar/${selected!.id}/`, {
         method: "POST",
         body: JSON.stringify({ items: despachoItems }),
       });

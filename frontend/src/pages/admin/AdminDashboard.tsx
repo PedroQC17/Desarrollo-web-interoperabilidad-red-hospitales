@@ -68,8 +68,8 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         const [hospitals, usuarios, ventas, servicios] = await Promise.all([
-          api("/hospitales/hospitales/"),
-          api("/usuarios/admin/usuarios/"),
+          api("/hospitales/"),
+          api("/auth/users/"),
           api("/medicamentos/reporte-ventas/"),
           api("/citas/reporte-servicios/"),
         ]);
@@ -95,23 +95,18 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    api("/usuarios/actividad/reciente/")
-      .then(setActivities)
-      .catch(() => setActivities([]))
-      .finally(() => setLoadingActivity(false));
+    setLoadingActivity(false);
   }, []);
 
   useEffect(() => {
-    api("/hospitales/hospitales/reporte/")
+    api("/hospitales/reporte/")
       .then((data) => {
         const ranked = (Array.isArray(data) ? data : [])
           .map((h: any) => ({
-            name: h.hospital__nombre || "—",
-            total_citas: h.total_citas || 0,
-            total_medicos: h.total_medicos || 0,
-          }))
-          .sort((a: HospitalRanking, b: HospitalRanking) => b.total_citas - a.total_citas)
-          .slice(0, 5);
+            name: h.nombre || "—",
+            total_citas: 0,
+            total_medicos: 0,
+          }));
         setTopHospitals(ranked);
       })
       .catch(() => setTopHospitals([]))

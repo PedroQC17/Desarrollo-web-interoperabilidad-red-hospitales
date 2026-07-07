@@ -72,7 +72,7 @@ const AdminHospitales = () => {
   // ── Cargar ────────────────────────────────────────────────────────────────
   const cargarHospitales = async () => {
     try {
-      const data = await api("/hospitales/hospitales/?activo=true");
+      const data = await api("/hospitales/?activo=true");
       setHospitales(data);
     } catch {
       toast.error("Error al cargar hospitales");
@@ -139,7 +139,7 @@ const AdminHospitales = () => {
     if (!validarForm()) return;
     setFormLoading(true);
     try {
-      await api("/hospitales/hospitales/", {
+      await api("/hospitales/", {
         method: "POST",
         body: JSON.stringify({ ...form, activo: true }),
       });
@@ -177,7 +177,7 @@ const AdminHospitales = () => {
     if (!validarForm()) return;
     setFormLoading(true);
     try {
-      await api(`/hospitales/hospitales/${hospitalEditar.id}/`, {
+      await api(`/hospitales/${hospitalEditar.id}/`, {
         method: "PATCH",
         body: JSON.stringify(form),
       });
@@ -209,7 +209,7 @@ const AdminHospitales = () => {
     setDesafiliando(true);
     setLoadingIds((prev) => [...prev, hospitalDesafiliar.id]);
     try {
-      await api(`/hospitales/hospitales/${hospitalDesafiliar.id}/desafiliar/`, {
+      await api(`/hospitales/${hospitalDesafiliar.id}/desafiliar/`, {
         method: "POST",
         body: JSON.stringify({ motivo: motivoDesafiliar.trim() }),
       });

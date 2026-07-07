@@ -66,7 +66,7 @@ const AdminReportes = () => {
       if (filtroDesde)   params.append("desde", filtroDesde);
       if (filtroHasta)   params.append("hasta", filtroHasta);
       const query = params.toString() ? `?${params.toString()}` : "";
-      const data = await api(`/hospitales/hospitales/reporte/${query}`);
+      const data = await api(`/hospitales/reporte/${query}`);
       setReporteHospitales(Array.isArray(data) ? data : []);
     } catch {
       setErrorReporte("No se pudo cargar el reporte de hospitales.");
@@ -94,7 +94,7 @@ const AdminReportes = () => {
       if (filtroDesde) params.append("desde", filtroDesde);
       if (filtroHasta) params.append("hasta", filtroHasta);
       const query = params.toString() ? `?${params.toString()}` : "";
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/hospitales/hospitales/reporte_pdf/${query}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/hospitales/reporte_pdf/${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) { toast.error("Error al descargar el PDF"); return; }

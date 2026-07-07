@@ -1,6 +1,36 @@
 from django.db import models
 
 
+class Hospital(models.Model):
+    TIPO_CHOICES = [
+        ("publico", "Público"),
+        ("privado", "Privado"),
+        ("clinica", "Clínica"),
+        ("centro_salud", "Centro de Salud"),
+    ]
+
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default="publico")
+    nombre = models.CharField(max_length=255)
+    alias = models.CharField(max_length=100, blank=True)
+    descripcion = models.TextField(blank=True)
+    contacto = models.CharField(max_length=20)
+    especialidad = models.CharField(max_length=255)
+    ubicacion = models.CharField(max_length=255)
+    periodo = models.CharField(max_length=100)
+    activo = models.BooleanField(default=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    fecha_desactivacion = models.DateTimeField(null=True, blank=True)
+    motivo_desactivacion = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Hospital"
+        verbose_name_plural = "Hospitales"
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return self.nombre
+
+
 class Medico(models.Model):
     ESPECIALIDADES = [
         ("Cardiologia", "Cardiología"),
