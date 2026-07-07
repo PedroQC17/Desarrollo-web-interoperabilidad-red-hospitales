@@ -7,7 +7,7 @@ database:
   name: db_soporte
   user: postgres
   password: postgres
-  host: localhost
+  host: postgres-soporte
   port: 5432
 
 services:

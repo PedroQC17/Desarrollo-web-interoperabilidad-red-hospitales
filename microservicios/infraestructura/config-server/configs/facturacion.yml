@@ -8,7 +8,7 @@ database:
   user: root
   password: root
   host: mysql-facturacion
-  port: 3307
+  port: 3306
 
 services:
   auth: "http://auth-service:8001"

@@ -7,7 +7,7 @@ database:
   name: db_medicamentos
   user: postgres
   password: postgres
-  host: localhost
+  host: postgres-medicamentos
   port: 5432
 
 services:
