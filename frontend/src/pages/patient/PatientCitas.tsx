@@ -138,7 +138,7 @@ const PatientCitas = () => {
     const loadHospitals = async () => {
       setHospitalsLoading(true);
       try {
-        setHospitals(extractList<Hospital>(await api("/hospitales/hospitales/")));
+        setHospitals(extractList<Hospital>(await api("/medicos/hospitales/")));
       } catch {
         setHospitalsError("No se pudieron cargar los hospitales.");
       } finally {
@@ -173,7 +173,7 @@ const PatientCitas = () => {
       setFormError("");
       try {
         setDoctors(extractList<DoctorAvailable>(
-          await api(`/citas/medicos-disponibles/?hospital=${form.hospital}`)
+          await api(`/medicos/medicos-disponibles/?hospital_id=${form.hospital}`)
         ));
         setForm((p) => ({ ...p, especialidad: "", medico: "" }));
       } catch (error) {
@@ -226,22 +226,20 @@ const PatientCitas = () => {
 
     setFormLoading(true);
     try {
-      const response = await api("/citas/solicitar/", {
+      const response = await api("/citas/", {
         method: "POST",
         body: JSON.stringify({
-          hospital:           Number(form.hospital),
-          medico:             Number(form.medico),
-          tipo:               form.tipo,
-          categoria_servicio: medicoObj?.especialidad ?? form.especialidad,
-          especialidad:       medicoObj?.especialidad ?? form.especialidad,
-          prioridad:          "normal",
-          inicio:             inicio.toISOString(),
-          fin:                fin.toISOString(),
-          nota:               form.motivo + (form.nota ? `\n\n${form.nota}` : ""),
-          costo_servicio:     0,
+          medico_id:     Number(form.medico),
+          medico_nombre: medicoObj?.nombre || "",
+          especialidad:  medicoObj?.especialidad ?? form.especialidad,
+          tipo:          form.tipo,
+          prioridad:     "media",
+          inicio:        inicio.toISOString(),
+          fin:           fin.toISOString(),
+          motivo:        form.motivo + (form.nota ? `\n\n${form.nota}` : ""),
         }),
       });
-      setAppointments((current) => [formatAppointment(response.cita), ...current]);
+      setAppointments((current) => [formatAppointment(response), ...current]);
       setSuccessMessage("Cita solicitada correctamente.");
       setTimeout(() => setSuccessMessage(""), 4000);
       setIsModalOpen(false);
@@ -257,9 +255,12 @@ const PatientCitas = () => {
     if (!window.confirm("¿Quieres cancelar esta cita?")) return;
     setCancelLoading(appointmentId);
     try {
-      const response = await api(`/citas/${appointmentId}/cancelar/`, { method: "PATCH" });
+      const response = await api(`/citas/${appointmentId}/estado/`, {
+        method: "PATCH",
+        body: JSON.stringify({ estado: "cancelada" }),
+      });
       setAppointments((current) =>
-        current.map((item) => item.id === appointmentId ? formatAppointment(response.cita) : item)
+        current.map((item) => item.id === appointmentId ? formatAppointment(response) : item)
       );
       setSuccessMessage("Cita cancelada correctamente.");
       setTimeout(() => setSuccessMessage(""), 4000);

@@ -65,6 +65,22 @@ def medico_detail(request, pk):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def hospitales_list(request):
+    hospitales = (
+        Medico.objects.exclude(hospital_id__isnull=True)
+        .values("hospital_id", "ubicacion")
+        .distinct()
+    )
+    seen = {}
+    for h in hospitales:
+        hid = h["hospital_id"]
+        if hid not in seen:
+            seen[hid] = {"id": hid, "nombre": h["ubicacion"]}
+    return Response(list(seen.values()))
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def medicos_disponibles(request):
     queryset = Medico.objects.filter(disponibilidad=True)
     especialidad = request.query_params.get("especialidad")

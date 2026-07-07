@@ -80,6 +80,7 @@ ROUTE_MAP = [
     ("/api/auth/", "auth"),
     ("/api/pacientes/", "pacientes"),
     ("/api/medicos/", "medicos"),
+    ("/api/hospitales/", "medicos"),
     ("/api/citas/", "citas"),
     ("/api/medicamentos/", "medicamentos"),
     ("/api/facturacion/", "facturacion"),

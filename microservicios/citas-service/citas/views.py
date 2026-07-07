@@ -64,7 +64,12 @@ def cita_list(request):
     if request.method == "POST":
         if not (_is_admin(request) or _is_paciente(request)):
             return Response({"error": "No tienes permiso para crear citas"}, status=status.HTTP_403_FORBIDDEN)
-        serializer = CitaSerializer(data=request.data)
+        data = request.data.copy()
+        if _is_paciente(request):
+            data["paciente_id"] = request.user.id
+        if not data.get("estado"):
+            data["estado"] = "pendiente"
+        serializer = CitaSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
