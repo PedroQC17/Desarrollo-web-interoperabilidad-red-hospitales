@@ -285,7 +285,7 @@ services:
     ports:
       - "8005:8005"
     environment:
-      USE_SQLITE: "True"
+      USE_SQLITE: "False"
       CONFIG_SERVER: http://config-server:8888
       CONSUL_HOST: consul
       CONSUL_ADDRESS: medicamentos-service
@@ -293,6 +293,8 @@ services:
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8005"
     depends_on:
+      postgres-medicamentos:
+        condition: service_healthy
       config-server:
         condition: service_started
       consul:
@@ -329,7 +331,7 @@ services:
     ports:
       - "8007:8007"
     environment:
-      USE_SQLITE: "True"
+      USE_SQLITE: "False"
       CONFIG_SERVER: http://config-server:8888
       CONSUL_HOST: consul
       CONSUL_ADDRESS: soporte-service
@@ -337,6 +339,8 @@ services:
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8007"
     depends_on:
+      postgres-soporte:
+        condition: service_healthy
       config-server:
         condition: service_started
       consul:
