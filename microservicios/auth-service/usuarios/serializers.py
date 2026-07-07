@@ -16,4 +16,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ["id", "email", "nombre", "tipo_usuario", "is_active", "fecha_registro"]
+        fields = ["id", "email", "nombre", "tipo_usuario", "is_active", "fecha_registro", "foto", "notificaciones"]
+        read_only_fields = ["fecha_registro"]
+
+
+class NotificacionesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ["notificaciones"]

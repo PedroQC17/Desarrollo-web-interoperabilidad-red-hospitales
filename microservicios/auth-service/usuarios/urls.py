@@ -6,6 +6,8 @@ from .views import (
     RefreshView,
     VerifyView,
     MeView,
+    ProfilePhotoView,
+    NotifPrefsView,
     UserDetailView,
     UserListView,
 )
@@ -17,6 +19,8 @@ urlpatterns = [
     path("api/auth/refresh/", RefreshView.as_view(), name="refresh"),
     path("api/auth/verify/", VerifyView.as_view(), name="verify"),
     path("api/auth/me/", MeView.as_view(), name="me"),
+    path("api/auth/me/photo/", ProfilePhotoView.as_view(), name="me-photo"),
+    path("api/auth/me/notificaciones/", NotifPrefsView.as_view(), name="me-notifs"),
     path("api/auth/users/", UserListView.as_view(), name="user-list"),
     path("api/auth/users/<int:pk>/", UserDetailView.as_view(), name="user-detail"),
 ]

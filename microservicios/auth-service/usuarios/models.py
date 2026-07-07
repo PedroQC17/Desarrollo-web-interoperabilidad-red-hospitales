@@ -36,6 +36,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     fecha_registro = models.DateTimeField(auto_now_add=True)
+    foto = models.TextField(blank=True, default="")
+    notificaciones = models.JSONField(default=dict, blank=True)
 
     objects = UsuarioManager()
 

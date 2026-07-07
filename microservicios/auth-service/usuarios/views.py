@@ -1,3 +1,5 @@
+import base64
+
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
@@ -7,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from .models import Usuario
-from .serializers import RegisterSerializer, UsuarioSerializer
+from .serializers import RegisterSerializer, UsuarioSerializer, NotificacionesSerializer
 
 
 def health(request):
@@ -99,6 +101,12 @@ class MeView(APIView):
     def get(self, request):
         return Response(UsuarioSerializer(request.user).data)
 
+    def patch(self, request):
+        serializer = UsuarioSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
 
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -117,3 +125,34 @@ class UserListView(APIView):
     def get(self, request):
         users = Usuario.objects.all().order_by("-fecha_registro")
         return Response(UsuarioSerializer(users, many=True).data)
+
+
+class ProfilePhotoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        foto_file = request.FILES.get("foto")
+        if not foto_file:
+            return Response({"error": "No se envió ninguna imagen"}, status=status.HTTP_400_BAD_REQUEST)
+        foto_base64 = base64.b64encode(foto_file.read()).decode("utf-8")
+        request.user.foto = foto_base64
+        request.user.save(update_fields=["foto"])
+        return Response({"foto": foto_base64})
+
+    def delete(self, request):
+        request.user.foto = ""
+        request.user.save(update_fields=["foto"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class NotifPrefsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(request.user.notificaciones)
+
+    def put(self, request):
+        serializer = NotificacionesSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

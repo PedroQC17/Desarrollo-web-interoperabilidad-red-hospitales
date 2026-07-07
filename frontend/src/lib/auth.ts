@@ -2,7 +2,7 @@ import { api } from "./api";
 import config from "@/config/env";
 
 export const login = async (email: string, password: string) => {
-  const data = await api("/usuarios/login/", {
+  const data = await api("/auth/login/", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   }, true); // 👈 público
@@ -14,7 +14,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const register = async (payload: any) => {
-  const data = await api("/usuarios/register/", {
+  const data = await api("/auth/register/", {
     method: "POST",
     body: JSON.stringify(payload),
   }, true); // 👈 público
@@ -25,7 +25,7 @@ export const register = async (payload: any) => {
   return data;
 };
 export const getProfile = async () => {
-  return api("/usuarios/profile/");
+  return api("/auth/me/");
 };
 
 export const logout = () => {
@@ -35,7 +35,7 @@ export const logout = () => {
 
 // Renueva el access token usando el refresh token
 export const updateProfile = async (data: Record<string, any>) => {
-  return api("/usuarios/profile/", {
+  return api("/auth/me/", {
     method: "PATCH",
     body: JSON.stringify(data),
   });
@@ -44,24 +44,24 @@ export const updateProfile = async (data: Record<string, any>) => {
 export const uploadProfilePhoto = async (file: File) => {
   const formData = new FormData();
   formData.append("foto", file);
-  return api("/usuarios/profile/photo/", {
+  return api("/auth/me/photo/", {
     method: "POST",
     body: formData,
   });
 };
 
 export const deleteProfilePhoto = async () => {
-  return api("/usuarios/profile/photo/", {
+  return api("/auth/me/photo/", {
     method: "DELETE",
   });
 };
 
 export const getNotifPrefs = async () => {
-  return api("/usuarios/profile/notificaciones/");
+  return api("/auth/me/notificaciones/");
 };
 
 export const updateNotifPrefs = async (data: Record<string, boolean>) => {
-  return api("/usuarios/profile/notificaciones/", {
+  return api("/auth/me/notificaciones/", {
     method: "PUT",
     body: JSON.stringify(data),
   });
@@ -72,7 +72,7 @@ export const refreshAccessToken = async (): Promise<string | null> => {
   if (!refresh) return null;
 
   try {
-    const res = await fetch(`${config.api.baseUrl}/usuarios/token/refresh/`, {
+    const res = await fetch(`${config.api.baseUrl}/auth/refresh/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh }),
