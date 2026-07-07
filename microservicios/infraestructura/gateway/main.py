@@ -5,6 +5,7 @@ import jwt
 
 import consul
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 CONFIG_SERVER_URL = os.getenv("CONFIG_SERVER_URL", "http://localhost:8888")
@@ -13,6 +14,14 @@ CONSUL_PORT = int(os.getenv("CONSUL_PORT", "8500"))
 GATEWAY_PORT = int(os.getenv("PORT", "8000"))
 
 app = FastAPI(title="API Gateway")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ── Cargar configuración desde Config Server ────────
 def load_config():
