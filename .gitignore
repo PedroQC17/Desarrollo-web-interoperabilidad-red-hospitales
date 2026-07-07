@@ -3,3 +3,33 @@ __pycache__/
 node_modules/
 venv/
 .vite/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database files
+*.sqlite3
+*.db
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Dev artifacts
+.commandcode/
+dist/
+build/
+
+# Backend specific
+backend/.env
+backend/db.sqlite3
+backend/SIEHC/.env
+backend/SIEHC/db.sqlite3
+backend/SIEHC/*.sqlite3
