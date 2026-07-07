@@ -12,7 +12,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # ── 0. Instalar dependencias ────────────────────────
-Write-Host "[0/6] Verificando dependencias..." -ForegroundColor Yellow
+Write-Host "[0/7] Verificando dependencias..." -ForegroundColor Yellow
 $deps = @(
     @{Pkg="django"; Mod="django"},
     @{Pkg="djangorestframework"; Mod="rest_framework"},
@@ -34,7 +34,7 @@ foreach ($dep in $deps) {
 Write-Host "  Dependencias listas." -ForegroundColor Green
 
 # ── 1. Consul ────────────────────────────────────────
-Write-Host "[1/6] Iniciando Consul (puerto 8500)..." -ForegroundColor Yellow
+Write-Host "[1/7] Iniciando Consul (puerto 8500)..." -ForegroundColor Yellow
 $ConsulJob = Start-Job -ScriptBlock {
     param($dir)
     $log = Join-Path $dir "logs\consul.log"
@@ -49,7 +49,7 @@ $ConsulJob = Start-Job -ScriptBlock {
 Start-Sleep -Seconds 4
 
 # ── 2. Config Server ─────────────────────────────────
-Write-Host "[2/6] Iniciando Config Server (puerto 8888)..." -ForegroundColor Yellow
+Write-Host "[2/7] Iniciando Config Server (puerto 8888)..." -ForegroundColor Yellow
 $ConfigJob = Start-Job -ScriptBlock {
     param($dir)
     $log = Join-Path $dir "logs\config-server.log"
@@ -59,7 +59,7 @@ $ConfigJob = Start-Job -ScriptBlock {
 Start-Sleep -Seconds 2
 
 # ── 3. Auth Service ──────────────────────────────────
-Write-Host "[3/6] Iniciando Auth Service (puerto 8001)..." -ForegroundColor Yellow
+Write-Host "[3/7] Iniciando Auth Service (puerto 8001)..." -ForegroundColor Yellow
 $AuthJob = Start-Job -ScriptBlock {
     param($dir)
     $log = Join-Path $dir "logs\auth-service.log"
@@ -70,7 +70,7 @@ $AuthJob = Start-Job -ScriptBlock {
 Start-Sleep -Seconds 2
 
 # ── 4. Microservicios Django ─────────────────────────
-Write-Host "[4/6] Iniciando servicios Django..." -ForegroundColor Yellow
+Write-Host "[4/7] Iniciando servicios Django..." -ForegroundColor Yellow
 
 $services = @(
     @{Name="Pacientes"; Port=8002; Dir="pacientes-service"},
@@ -96,7 +96,7 @@ foreach ($svc in $services) {
 }
 
 # ── 5. Gateway ───────────────────────────────────────
-Write-Host "[5/6] Iniciando API Gateway (puerto 8000)..." -ForegroundColor Yellow
+Write-Host "[5/7] Iniciando API Gateway (puerto 8000)..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
 $GatewayJob = Start-Job -ScriptBlock {
     param($dir)
@@ -107,6 +107,19 @@ $GatewayJob = Start-Job -ScriptBlock {
 } -ArgumentList $Root
 Start-Sleep -Seconds 2
 
+# ── 6. Frontend ──────────────────────────────────────
+Write-Host "[6/7] Iniciando Frontend (puerto 8080)..." -ForegroundColor Yellow
+$FrontendJob = Start-Job -ScriptBlock {
+    param($dir)
+    $log = Join-Path $dir "logs\frontend.log"
+    Set-Location (Join-Path $dir "..\frontend")
+    & "npm" run dev 2>&1 | Out-File $log
+} -ArgumentList $Root
+Start-Sleep -Seconds 3
+
+Write-Host "[7/7] Inicializando servicios..." -ForegroundColor Yellow
+Start-Sleep -Seconds 5
+
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "  Todos los servicios iniciados!" -ForegroundColor Green
@@ -115,6 +128,7 @@ Write-Host ""
 Write-Host "  Consul UI:       http://localhost:8500" -ForegroundColor Cyan
 Write-Host "  Config Server:   http://localhost:8888" -ForegroundColor Cyan
 Write-Host "  API Gateway:     http://localhost:8000" -ForegroundColor Cyan
+Write-Host "  Frontend:        http://localhost:8080" -ForegroundColor Cyan
 Write-Host "  Auth Service:    http://localhost:8001" -ForegroundColor Cyan
 Write-Host "  Pacientes:       http://localhost:8002" -ForegroundColor Cyan
 Write-Host "  Medicos:         http://localhost:8003" -ForegroundColor Cyan

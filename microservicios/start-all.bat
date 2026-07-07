@@ -4,19 +4,19 @@ echo  Iniciando todos los microservicios
 echo ========================================
 echo.
 
-echo [1/6] Iniciando Consul...
+echo [1/7] Iniciando Consul...
 start "Consul" cmd /c "cd /d %~dp0infraestructura\consul && start-consul.bat"
 timeout /t 3 /nobreak >nul
 
-echo [2/6] Iniciando Config Server...
+echo [2/7] Iniciando Config Server...
 start "Config-Server" cmd /c "cd /d %~dp0infraestructura\config-server && python -m uvicorn main:app --host 0.0.0.0 --port 8888 --reload"
 timeout /t 2 /nobreak >nul
 
-echo [3/6] Iniciando Auth Service...
+echo [3/7] Iniciando Auth Service...
 start "Auth-Service" cmd /c "cd /d %~dp0auth-service && python manage.py runserver 0.0.0.0:8001"
 timeout /t 2 /nobreak >nul
 
-echo [4/6] Iniciando servicios Django...
+echo [4/7] Iniciando servicios Django...
 start "Pacientes" cmd /c "cd /d %~dp0pacientes-service && python manage.py runserver 0.0.0.0:8002"
 timeout /t 1 /nobreak >nul
 start "Medicos" cmd /c "cd /d %~dp0medicos-service && python manage.py runserver 0.0.0.0:8003"
@@ -31,9 +31,16 @@ start "Soporte" cmd /c "cd /d %~dp0soporte-service && python manage.py runserver
 
 timeout /t 3 /nobreak >nul
 
-echo [5/6] Iniciando API Gateway...
+echo [5/7] Iniciando API Gateway...
 start "Gateway" cmd /c "cd /d %~dp0infraestructura\gateway && python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 timeout /t 2 /nobreak >nul
+
+echo [6/7] Iniciando Frontend...
+start "Frontend" cmd /c "cd /d %~dp0..\frontend && npm run dev"
+timeout /t 2 /nobreak >nul
+
+echo [7/7] Inicializando servicios...
+timeout /t 5 /nobreak >nul
 
 echo.
 echo ========================================
@@ -41,7 +48,9 @@ echo  Servicios iniciados
 echo ========================================
 echo.
 echo  Consul UI:       http://localhost:8500
+echo  Config Server:   http://localhost:8888
 echo  API Gateway:     http://localhost:8000
+echo  Frontend:        http://localhost:8080
 echo  Auth:            http://localhost:8001
 echo  Pacientes:       http://localhost:8002
 echo  Medicos:         http://localhost:8003
