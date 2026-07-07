@@ -15,10 +15,13 @@ class UsuarioManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, nombre, password=None):
-        user = self.create_user(email, nombre, "admin", password)
+    def create_superuser(self, email, nombre, password=None, **extra_fields):
+        extra_fields.setdefault("tipo_usuario", "admin")
+        user = self.create_user(email, nombre, extra_fields.pop("tipo_usuario"), password)
         user.is_staff = True
         user.is_superuser = True
+        for key, value in extra_fields.items():
+            setattr(user, key, value)
         user.save(using=self._db)
         return user
 
