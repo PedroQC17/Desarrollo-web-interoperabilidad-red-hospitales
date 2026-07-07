@@ -1,6 +1,6 @@
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -63,6 +63,42 @@ def factura_detail(request, pk):
 
     serializer = FacturaSerializer(factura)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def factura_pdf(request, pk):
+    try:
+        factura = Factura.objects.get(pk=pk)
+    except Factura.DoesNotExist:
+        return Response({"error": "Factura no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+
+    if not _is_admin(request) and factura.paciente_id != request.user.id:
+        return Response({"error": "No tienes permiso"}, status=status.HTTP_403_FORBIDDEN)
+
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Factura #{factura.id}</title>
+<style>
+  body {{ font-family: Arial; padding: 40px; }}
+  h1 {{ color: #2563eb; }}
+  table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
+  th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+  th {{ background: #f3f4f6; }}
+  .total {{ font-size: 18px; font-weight: bold; margin-top: 20px; }}
+</style></head><body>
+<h1>Factura #{factura.id}</h1>
+<p><strong>Paciente:</strong> {factura.paciente_nombre or 'N/A'}</p>
+<p><strong>Fecha:</strong> {factura.fecha_emision or factura.fecha_creacion}</p>
+<p><strong>Estado:</strong> {'Pagada' if factura.pagada else 'Pendiente'}</p>
+<table>
+<tr><th>Concepto</th><th>Monto</th></tr>
+<tr><td>Consulta</td><td>S/ {float(factura.monto_consulta or 0):.2f}</td></tr>
+<tr><td>Medicamentos</td><td>S/ {float(factura.monto_medicamentos or 0):.2f}</td></tr>
+</table>
+<p class="total">Total: S/ {float(factura.monto_total or 0):.2f}</p>
+</body></html>"""
+    return HttpResponse(html, content_type="text/html; charset=utf-8",
+                        headers={"Content-Disposition": f'inline; filename="factura_{factura.id}.html"'})
 
 
 @api_view(["PATCH"])
