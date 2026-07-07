@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, downloadBlob } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -94,13 +94,8 @@ const DoctorRecetas = () => {
   };
 
   const descargarPDF = async (recetaId: number) => {
-    const token = localStorage.getItem("access");
     try {
-      const res = await fetch(`${config.api.baseUrl}/recetas/${recetaId}/pdf/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al descargar PDF");
-      const blob = await res.blob();
+      const blob = await downloadBlob(`/recetas/${recetaId}/pdf/`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, downloadBlob } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -88,15 +88,10 @@ const PatientFacturacion = () => {
 
   const descargarPDF = async (id: number, tipo: string) => {
     try {
-      const token = localStorage.getItem("access");
       const endpoint = tipo === "medicamento"
         ? `/medicamentos/despacho/${id}/pdf/`
         : `/facturacion/${id}/pdf/`;
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}${endpoint}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) { toast.error("Error al descargar la factura"); return; }
-      const blob = await res.blob();
+      const blob = await downloadBlob(endpoint);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

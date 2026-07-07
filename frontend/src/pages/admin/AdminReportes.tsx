@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, downloadBlob } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,16 +89,11 @@ const AdminReportes = () => {
 
   const descargarPDF = async () => {
     try {
-      const token = localStorage.getItem("access");
       const params = new URLSearchParams();
       if (filtroDesde) params.append("desde", filtroDesde);
       if (filtroHasta) params.append("hasta", filtroHasta);
       const query = params.toString() ? `?${params.toString()}` : "";
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api"}/hospitales/reporte_pdf/${query}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) { toast.error("Error al descargar el PDF"); return; }
-      const blob = await res.blob();
+      const blob = await downloadBlob(`/hospitales/reporte_pdf/${query}`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

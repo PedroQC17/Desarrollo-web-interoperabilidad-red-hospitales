@@ -98,6 +98,44 @@ services:
     networks:
       - red-hospital
 
+  postgres-medicamentos:
+    image: postgres:15
+    container_name: red-hospital-pg-medicamentos
+    environment:
+      POSTGRES_DB: db_medicamentos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_medicamentos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pg_medicamentos_data:/var/lib/postgresql/data
+    networks:
+      - red-hospital
+
+  postgres-soporte:
+    image: postgres:15
+    container_name: red-hospital-pg-soporte
+    environment:
+      POSTGRES_DB: db_soporte
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d db_soporte"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pg_soporte_data:/var/lib/postgresql/data
+    networks:
+      - red-hospital
+
   # ═══════════════════════════════════════════
   # INFRAESTRUCTURA
   # ═══════════════════════════════════════════
@@ -310,6 +348,8 @@ volumes:
   pg_auth_data:
   pg_pacientes_data:
   pg_medicos_data:
+  pg_medicamentos_data:
+  pg_soporte_data:
   mysql_citas_data:
   mysql_facturacion_data:
 

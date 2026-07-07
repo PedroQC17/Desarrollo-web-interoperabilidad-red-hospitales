@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
+import { api, downloadBlob } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -226,13 +226,8 @@ export default function DoctorAtencion() {
   };
 
   const descargarPDF = async (recetaId: number) => {
-    const token = localStorage.getItem("access");
     try {
-      const res = await fetch(`${config.api.baseUrl}/recetas/${recetaId}/pdf/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const blob = await res.blob();
+      const blob = await downloadBlob(`/recetas/${recetaId}/pdf/`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
