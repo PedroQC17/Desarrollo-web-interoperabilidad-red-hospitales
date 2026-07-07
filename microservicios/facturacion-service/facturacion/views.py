@@ -1,8 +1,7 @@
-from datetime import datetime
-
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 from django.http import JsonResponse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -86,7 +85,7 @@ def registrar_pago(request, pk):
 
     factura.pagada = True
     factura.metodo_pago = metodo
-    factura.fecha_pago = datetime.now()
+    factura.fecha_pago = timezone.now()
     factura.save()
 
     serializer = FacturaSerializer(factura)

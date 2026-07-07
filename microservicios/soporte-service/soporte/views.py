@@ -121,8 +121,11 @@ def mensaje_detail(request, pk):
     tipo = _get_user_tipo(request)
     if tipo == "paciente" and msg.paciente_id != user_id:
         return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
-    if tipo == "medico" and msg.medico_id and msg.medico_id != user_id:
-        return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+    if tipo == "medico":
+        if msg.medico_id and msg.medico_id != user_id:
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
+        if msg.paciente_id and msg.paciente_id != user_id:
+            return Response({"error": "No tienes permisos"}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = MensajeSerializer(msg)
     return Response(serializer.data)

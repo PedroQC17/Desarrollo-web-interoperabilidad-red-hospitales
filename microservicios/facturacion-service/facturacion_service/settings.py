@@ -77,7 +77,7 @@ else:
             "USER": db.get("user", "root"),
             "PASSWORD": db.get("password", "root"),
             "HOST": db.get("host", "localhost"),
-            "PORT": db.get("port", 3307),
+            "PORT": db.get("port", 3306),
         }
     }
 

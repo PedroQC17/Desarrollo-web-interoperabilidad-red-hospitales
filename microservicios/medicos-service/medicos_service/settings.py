@@ -77,7 +77,7 @@ else:
             "USER": db.get("user", "postgres"),
             "PASSWORD": db.get("password", "postgres"),
             "HOST": db.get("host", "localhost"),
-            "PORT": db.get("port", 5434),
+            "PORT": db.get("port", 5432),
         }
     }
 

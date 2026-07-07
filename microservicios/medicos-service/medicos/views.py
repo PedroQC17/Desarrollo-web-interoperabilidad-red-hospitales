@@ -67,17 +67,14 @@ def medico_detail(request, pk):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def hospitales_list(request):
-    hospitales = (
-        Medico.objects.exclude(hospital_id__isnull=True)
-        .values("hospital_id", "ubicacion")
-        .distinct()
-    )
-    seen = {}
-    for h in hospitales:
-        hid = h["hospital_id"]
-        if hid not in seen:
-            seen[hid] = {"id": hid, "nombre": h["ubicacion"]}
-    return Response(list(seen.values()))
+    queryset = Hospital.objects.all()
+    activo = request.query_params.get("activo")
+    if activo == "true":
+        queryset = queryset.filter(activo=True)
+    elif activo == "false":
+        queryset = queryset.filter(activo=False)
+    serializer = HospitalSerializer(queryset, many=True)
+    return Response(serializer.data)
 
 
 @api_view(["GET"])

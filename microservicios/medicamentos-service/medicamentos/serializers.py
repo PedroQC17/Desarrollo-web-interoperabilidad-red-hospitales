@@ -15,15 +15,27 @@ class MedicamentoSerializer(serializers.ModelSerializer):
 
 
 class DespachoItemInputSerializer(serializers.Serializer):
-    medicamento_id = serializers.IntegerField()
+    medicamento_id = serializers.IntegerField(required=False)
+    medicamento = serializers.IntegerField(required=False)
     cantidad = serializers.IntegerField(min_value=1)
+
+    def validate(self, data):
+        if not data.get("medicamento_id") and not data.get("medicamento"):
+            raise serializers.ValidationError({"medicamento_id": "Campo requerido (medicamento_id o medicamento)"})
+        return data
 
 
 class DespachoInputSerializer(serializers.Serializer):
-    paciente_id = serializers.IntegerField()
+    paciente_id = serializers.IntegerField(required=False)
     paciente_nombre = serializers.CharField(required=False, allow_blank=True)
-    cita_id = serializers.IntegerField()
+    cita_id = serializers.IntegerField(required=False)
     items = DespachoItemInputSerializer(many=True)
+
+    def validate_items(self, items):
+        for item in items:
+            if not item.get("medicamento_id") and item.get("medicamento"):
+                item["medicamento_id"] = item["medicamento"]
+        return items
 
 
 class DespachoItemOutputSerializer(serializers.ModelSerializer):
