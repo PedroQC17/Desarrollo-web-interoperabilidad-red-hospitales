@@ -49,21 +49,24 @@ const PatientFacturacion = () => {
 
       // Obtener facturas de medicamentos (despachos)
       const medicamentosData = await api("/medicamentos/mis-facturas-medicamentos/");
-      const medicamentos = Array.isArray(medicamentosData?.results)
-        ? medicamentosData.results.map((d: any) => ({
-            id: d.id,
-            tipo: "medicamento",
-            fecha_emitida: d.fecha_despacho,
-            hospital: `Despacho de Medicamentos`,
-            descripcion: `${d.items?.length || 0} medicamento(s) despachado(s)`,
-            medicamentos: d.items
-              ?.map((item: any) => `${item.medicamento_nombre} x${item.cantidad}`)
-              .join(", "),
-            monto_total: d.total,
-            estado_pago: "pagado",
-            cita_id: d.cita,
-          }))
+      const rawMedicamentos = Array.isArray(medicamentosData)
+        ? medicamentosData
+        : Array.isArray(medicamentosData?.results)
+        ? medicamentosData.results
         : [];
+      const medicamentos = rawMedicamentos.map((d: any) => ({
+          id: d.id,
+          tipo: "medicamento",
+          fecha_emitida: d.fecha_despacho,
+          hospital: `Despacho de Medicamentos`,
+          descripcion: `${d.items?.length || 0} medicamento(s) despachado(s)`,
+          medicamentos: d.items
+            ?.map((item: any) => `${item.medicamento_nombre} x${item.cantidad}`)
+            .join(", "),
+          monto_total: d.total,
+          estado_pago: "pagado",
+          cita_id: d.cita,
+        }));
 
       // Combinar y ordenar por fecha descendente
       const todasLasFacturas = [...consultas, ...medicamentos].sort(

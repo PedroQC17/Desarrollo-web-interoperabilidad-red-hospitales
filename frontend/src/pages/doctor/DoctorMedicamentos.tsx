@@ -82,7 +82,7 @@ const DoctorMedicamentos = () => {
   const fetchDespachos = async () => {
     try {
       const data = await api("/medicamentos/mis-despachos/");
-      setDespachos(Array.isArray(data?.results) ? data.results : []);
+      setDespachos(Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []);
     } catch (err) {
       setDespachos([]);
     }
