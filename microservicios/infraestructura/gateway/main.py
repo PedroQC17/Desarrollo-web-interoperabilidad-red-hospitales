@@ -2,11 +2,15 @@ import os
 import httpx
 import yaml
 import jwt
+import logging
 
 import consul
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logger = logging.getLogger("gateway")
 
 CONFIG_SERVER_URL = os.getenv("CONFIG_SERVER_URL", "http://localhost:8888")
 CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost")
@@ -30,6 +34,7 @@ def load_config():
         r.raise_for_status()
         return yaml.safe_load(r.text)
     except Exception as e:
+        logger.warning("No se pudo cargar config del Config Server, usando fallback: %s", e)
         return {
             "server": {"port": GATEWAY_PORT, "name": "api-gateway"},
             "services": {
@@ -46,6 +51,7 @@ def load_config():
 config = load_config()
 SERVICES = config.get("services", {})
 JWT_SECRET = None  # Se obtiene del Auth Service
+logger.info("SERVICES configurados: %s", SERVICES)
 
 def get_jwt_secret():
     global JWT_SECRET
@@ -54,9 +60,10 @@ def get_jwt_secret():
     try:
         r = httpx.get(f"{CONFIG_SERVER_URL}/auth/default", timeout=5)
         r.raise_for_status()
-        auth_cfg = yaml.safe_load(r.text)
+        auth_cfg = r.json()
         JWT_SECRET = auth_cfg.get("jwt", {}).get("secret", "django-insecure-dev-key-change-in-production")
-    except Exception:
+    except Exception as e:
+        logger.warning("No se pudo obtener JWT secret del Config Server: %s", e)
         JWT_SECRET = "django-insecure-dev-key-change-in-production"
     return JWT_SECRET
 
@@ -72,19 +79,24 @@ def register_consul():
             port=GATEWAY_PORT,
             check=consul.Check.http(f"http://{addr}:{GATEWAY_PORT}/health/", interval="10s"),
         )
-    except Exception:
-        pass
+        logger.info("API Gateway registrado en Consul (%s:%s)", CONSUL_HOST, CONSUL_PORT)
+    except Exception as e:
+        logger.warning("No se pudo registrar en Consul: %s", e)
 
 # ── Mapeo de rutas a servicios ───────────────────────
+# Las rutas más largas deben ir primero para evitar colisiones con startswith
 ROUTE_MAP = [
-    ("/api/auth/", "auth"),
-    ("/api/pacientes/", "pacientes"),
-    ("/api/medicos/", "medicos"),
+    ("/api/historiales/", "pacientes"),
     ("/api/hospitales/", "medicos"),
-    ("/api/citas/", "citas"),
     ("/api/medicamentos/", "medicamentos"),
     ("/api/facturacion/", "facturacion"),
+    ("/api/mensajes/", "soporte"),
+    ("/api/pacientes/", "pacientes"),
+    ("/api/medicos/", "medicos"),
     ("/api/soporte/", "soporte"),
+    ("/api/recetas/", "pacientes"),
+    ("/api/citas/", "citas"),
+    ("/api/auth/", "auth"),
 ]
 
 # Rutas públicas (no requieren JWT)
@@ -100,7 +112,7 @@ PUBLIC_PATHS = [
 
 def is_public(path: str) -> bool:
     stripped = path.rstrip("/")
-    if stripped.endswith("/health"):
+    if stripped == "/health":
         return True
     for p in PUBLIC_PATHS:
         if path.startswith(p):
