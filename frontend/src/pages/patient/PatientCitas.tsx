@@ -61,7 +61,7 @@ type Appointment = {
 type Hospital = { id: number; nombre: string };
 
 type DoctorAvailable = {
-  id: number; nombre: string; especialidad: string; periodo: string;
+  id: number; nombre: string; especialidad: string; servicio_sanitario: string;
   ubicacion: string; hospital_id: number | null; hospital_nombre: string | null; disponibilidad: boolean;
 };
 
@@ -349,7 +349,7 @@ const PatientCitas = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {medicosFiltrados.map((m) => (
-                      <SelectItem key={m.id} value={String(m.id)}>{m.nombre} — {m.periodo}</SelectItem>
+                      <SelectItem key={m.id} value={String(m.id)}>{m.nombre} — {m.servicio_sanitario}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
