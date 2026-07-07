@@ -6,6 +6,7 @@ urlpatterns = [
     path("health/", views.health, name="health"),
     path("mis-citas/", views.mis_citas, name="mis-citas"),
     path("mis-citas-medico/", views.mis_citas_medico, name="mis-citas-medico"),
+    path("medico/activas/", views.citas_medico_activas, name="citas-medico-activas"),
     path("reporte-servicios/", views.reporte_servicios, name="reporte-servicios"),
     path("", views.cita_list, name="cita-list"),
     path("<int:pk>/", views.cita_detail, name="cita-detail"),

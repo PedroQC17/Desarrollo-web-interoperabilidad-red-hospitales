@@ -196,6 +196,21 @@ def mis_citas_medico(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def citas_medico_activas(request):
+    if not _is_medico(request):
+        return Response({"error": "Solo médicos"}, status=status.HTTP_403_FORBIDDEN)
+
+    queryset = Cita.objects.filter(medico_id=request.user.id, estado__in=["confirmada", "en_curso"])
+    paciente_id = request.query_params.get("paciente_id")
+    if paciente_id:
+        queryset = queryset.filter(paciente_id=paciente_id)
+
+    serializer = CitaSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def cita_detalle(request, pk):
     try:
         cita = Cita.objects.get(pk=pk)
