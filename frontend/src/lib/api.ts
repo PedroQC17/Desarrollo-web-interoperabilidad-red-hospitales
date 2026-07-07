@@ -78,3 +78,28 @@ export const api = async (
 
   return res.json();
 };
+
+//funcion para un refresh automatico de token
+export const downloadBlob = async (endpoint: string): Promise<Blob> => {
+  const token = localStorage.getItem("access");
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_URL}${endpoint}`, { headers });
+
+  if (res.status === 401 && token) {
+    const newToken = await refreshAccessToken();
+    if (!newToken) {
+      navigateTo("/login");
+      throw new Error("Sesión expirada");
+    }
+    const retry = await fetch(`${API_URL}${endpoint}`, {
+      headers: { Authorization: `Bearer ${newToken}` },
+    });
+    if (!retry.ok) throw new Error("Error al descargar");
+    return retry.blob();
+  }
+
+  if (!res.ok) throw new Error("Error al descargar");
+  return res.blob();
+};

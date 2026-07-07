@@ -31,6 +31,7 @@ import {
   User,
   ClipboardList,
   CheckCircle2,
+  FileText,
 } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -67,6 +68,13 @@ interface Receta {
   fecha_emitida: string;
   medico_nombre?: string;
   hospital_nombre?: string;
+}
+
+interface Observacion {
+  id: number;
+  motivo_consulta: string;
+  antecedentes_patologicos: string;
+  fecha: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -148,7 +156,8 @@ const SubirHistorialModal = ({ onSuccess }: SubirModalProps) => {
       const data = await api("/historiales/mi-historial/");
       const diags = Array.isArray(data?.diagnosticos) ? data.diagnosticos.length : 0;
       const recs = Array.isArray(data?.recetas) ? data.recetas.length : 0;
-      const has = diags > 0 || recs > 0;
+      const obs = Array.isArray(data?.observaciones) ? data.observaciones.length : 0;
+      const has = diags > 0 || recs > 0 || obs > 0;
       setHistorialExists(has);
       setHistorialResumen({ diagnosticos: diags, recetas: recs });
     } catch (err: any) {
@@ -326,12 +335,18 @@ const handleSubmitObservacion = async () => {
                     <p className="text-sm font-medium text-foreground">
                       PDF procesado correctamente
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {resumenPdf.diagnosticos_creados} diagnósticos · {resumenPdf.recetas_creadas} recetas guardadas
-                    </p>
-                    {resumenPdf.recetas_omitidas.length > 0 && (
+                    {(resumenPdf.diagnosticos_creados || resumenPdf.recetas_creadas) ? (
+                      <p className="text-xs text-muted-foreground">
+                        {resumenPdf.diagnosticos_creados || 0} diagnósticos · {resumenPdf.recetas_creadas || 0} recetas guardadas
+                      </p>
+                    ) : resumenPdf.texto_extraido ? (
+                      <p className="text-xs text-muted-foreground">
+                        Texto extraído: {resumenPdf.texto_extraido?.substring(0, 100)}...
+                      </p>
+                    ) : null}
+                    {(resumenPdf.recetas_omitidas?.length ?? 0) > 0 && (
                       <p className="text-xs text-yellow-600">
-                        Medicamentos no encontrados en catálogo: {resumenPdf.recetas_omitidas.join(", ")}
+                        Medicamentos no encontrados en catálogo: {resumenPdf.recetas_omitidas?.join(", ")}
                       </p>
                     )}
                   </div>
@@ -544,24 +559,57 @@ const RecetaCard = ({ r }: { r: Receta }) => (
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  CARD — OBSERVACIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ObservacionCard = ({ o }: { o: Observacion }) => (
+  <Card className="border-border hover:shadow-md transition-shadow">
+    <CardContent className="p-5">
+      <div className="flex gap-4">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <FileText className="w-5 h-5 text-primary" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <h3 className="font-semibold text-foreground">{o.motivo_consulta}</h3>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Calendar className="w-3.5 h-3.5" />
+            {formatDate(o.fecha)}
+          </div>
+          {o.antecedentes_patologicos && (
+            <p className="text-sm text-foreground/80">{o.antecedentes_patologicos}</p>
+          )}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  ESTADO VACÍO
 // ─────────────────────────────────────────────────────────────────────────────
 
-const EmptyState = ({ type }: { type: "diagnosticos" | "recetas" }) => (
+const EmptyState = ({ type }: { type: "diagnosticos" | "recetas" | "observaciones" }) => (
   <div className="flex flex-col items-center justify-center py-16 text-center">
     <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
       {type === "diagnosticos"
         ? <Stethoscope className="w-8 h-8 text-primary/50" />
-        : <Pill className="w-8 h-8 text-primary/50" />
+        : type === "recetas"
+        ? <Pill className="w-8 h-8 text-primary/50" />
+        : <FileText className="w-8 h-8 text-primary/50" />
       }
     </div>
     <p className="text-muted-foreground font-medium">
-      {type === "diagnosticos" ? "No hay diagnósticos registrados" : "No hay recetas emitidas"}
+      {type === "diagnosticos" ? "No hay diagnósticos registrados"
+        : type === "recetas" ? "No hay recetas emitidas"
+        : "No hay observaciones registradas"
+      }
     </p>
     <p className="text-sm text-muted-foreground mt-1">
       {type === "diagnosticos"
         ? "Tus diagnósticos aparecerán aquí tras una atención médica."
-        : "Tus recetas médicas aparecerán aquí una vez que un médico las emita."
+        : type === "recetas"
+        ? "Tus recetas médicas aparecerán aquí una vez que un médico las emita."
+        : "Tus observaciones y motivos de consulta aparecerán aquí."
       }
     </p>
   </div>
@@ -574,6 +622,7 @@ const EmptyState = ({ type }: { type: "diagnosticos" | "recetas" }) => (
 const PatientHistorial = () => {
   const [diagnosticos, setDiagnosticos] = useState<Diagnostico[]>([]);
   const [recetas, setRecetas]           = useState<Receta[]>([]);
+  const [observaciones, setObservaciones] = useState<Observacion[]>([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState<string | null>(null);
 
@@ -581,12 +630,10 @@ const PatientHistorial = () => {
     setLoading(true);
     setError(null);
     try {
-      const [diags, recs] = await Promise.all([
-        api("/historiales/mis-diagnosticos/"),
-        api("/historiales/mis-recetas/"),
-      ]);
-      setDiagnosticos(Array.isArray(diags) ? diags : []);
-      setRecetas(Array.isArray(recs) ? recs : []);
+      const data = await api("/historiales/mi-historial/");
+      setDiagnosticos(Array.isArray(data?.diagnosticos) ? data.diagnosticos : []);
+      setRecetas(Array.isArray(data?.recetas) ? data.recetas : []);
+      setObservaciones(Array.isArray(data?.observaciones) ? data.observaciones : []);
     } catch {
       setError("No se pudo cargar el historial. Intenta nuevamente.");
     } finally {
@@ -603,14 +650,14 @@ const PatientHistorial = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Historial Médico</h1>
-          <p className="text-muted-foreground mt-1">Consulta tus diagnósticos y recetas médicas.</p>
+          <p className="text-muted-foreground mt-1">Consulta tus diagnósticos, recetas y observaciones médicas.</p>
         </div>
         <SubirHistorialModal onSuccess={fetchHistorial} />
       </div>
 
       {/* Resumen rápido */}
       {!loading && !error && (
-        <div className="grid grid-cols-2 gap-4 max-w-sm">
+        <div className="grid grid-cols-3 gap-4 max-w-sm">
           <Card className="border-border">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -618,7 +665,7 @@ const PatientHistorial = () => {
               </div>
               <div>
                 <p className="text-xl font-bold text-foreground">{diagnosticos.length}</p>
-                <p className="text-xs text-muted-foreground">Diagnósticos</p>
+                <p className="text-xs text-muted-foreground">Diag.</p>
               </div>
             </CardContent>
           </Card>
@@ -630,6 +677,17 @@ const PatientHistorial = () => {
               <div>
                 <p className="text-xl font-bold text-foreground">{recetas.length}</p>
                 <p className="text-xs text-muted-foreground">Recetas</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">{observaciones.length}</p>
+                <p className="text-xs text-muted-foreground">Obs.</p>
               </div>
             </CardContent>
           </Card>
@@ -660,10 +718,10 @@ const PatientHistorial = () => {
       {/* Tabs */}
       {!loading && !error && (
         <Tabs defaultValue="diagnosticos" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
             <TabsTrigger value="diagnosticos" className="gap-2">
               <Stethoscope className="w-4 h-4" />
-              Diagnósticos
+              Diag.
               {diagnosticos.length > 0 && (
                 <span className="ml-1 text-xs bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none">
                   {diagnosticos.length}
@@ -676,6 +734,15 @@ const PatientHistorial = () => {
               {recetas.length > 0 && (
                 <span className="ml-1 text-xs bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none">
                   {recetas.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="observaciones" className="gap-2">
+              <FileText className="w-4 h-4" />
+              Obs.
+              {observaciones.length > 0 && (
+                <span className="ml-1 text-xs bg-primary/20 text-primary rounded-full px-1.5 py-0.5 leading-none">
+                  {observaciones.length}
                 </span>
               )}
             </TabsTrigger>
@@ -700,6 +767,18 @@ const PatientHistorial = () => {
               : (
                 <div className="space-y-4">
                   {recetas.map((r) => <RecetaCard key={r.id} r={r} />)}
+                </div>
+              )
+            }
+          </TabsContent>
+
+          {/* TAB OBSERVACIONES */}
+          <TabsContent value="observaciones" className="mt-6">
+            {observaciones.length === 0
+              ? <EmptyState type="observaciones" />
+              : (
+                <div className="space-y-4">
+                  {observaciones.map((o) => <ObservacionCard key={o.id} o={o} />)}
                 </div>
               )
             }
