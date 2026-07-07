@@ -16,7 +16,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ["id", "email", "nombre", "tipo_usuario", "is_active", "fecha_registro", "foto", "notificaciones"]
+        fields = ["id", "email", "nombre", "tipo_usuario", "is_active", "fecha_registro", "foto", "notificaciones", "telecom", "genero", "fec_nac"]
         read_only_fields = ["fecha_registro"]
 
 

@@ -41,6 +41,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     fecha_registro = models.DateTimeField(auto_now_add=True)
     foto = models.TextField(blank=True, default="")
     notificaciones = models.JSONField(default=dict, blank=True)
+    telecom = models.CharField(max_length=20, blank=True, default="")
+    genero = models.CharField(max_length=10, blank=True, default="")
+    fec_nac = models.DateField(blank=True, null=True)
 
     objects = UsuarioManager()
 
