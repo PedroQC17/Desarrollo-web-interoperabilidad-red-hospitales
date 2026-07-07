@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Clock, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-network.png";
 
 const HeroSection = () => {
@@ -32,12 +33,14 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="text-base px-8 py-6 font-semibold">
-                Comenzar ahora
-                <ArrowRight className="ml-2 w-5 h-5" />
+              <Button size="lg" className="text-base px-8 py-6 font-semibold" asChild>
+                <Link to="/register">
+                  Comenzar ahora
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Link>
               </Button>
-              <Button variant="outline" size="lg" className="text-base px-8 py-6 font-semibold">
-                Conocer más
+              <Button variant="outline" size="lg" className="text-base px-8 py-6 font-semibold" asChild>
+                <a href="#features">Conocer más</a>
               </Button>
             </div>
 
