@@ -1,4 +1,6 @@
 import base64
+import os
+import httpx
 
 from django.http import JsonResponse
 from django.contrib.auth import authenticate
@@ -10,6 +12,32 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from .models import Usuario
 from .serializers import RegisterSerializer, UsuarioSerializer, NotificacionesSerializer
+
+
+CITAS_SERVICE_URL = os.getenv("CITAS_SERVICE_URL", "http://localhost:8003")
+
+
+def _crear_medico_en_citas(user):
+    """Crea el registro Medico en citas-service para un usuario medico."""
+    if user.tipo_usuario != "medico":
+        return
+    import traceback
+    try:
+        resp = httpx.post(
+            f"{CITAS_SERVICE_URL}/api/medicos/registrar/",
+            json={
+                "user_id": user.id,
+                "nombre": user.nombre,
+                "email": user.email,
+                "especialidad": "Medicina General",
+                "ubicacion": "",
+                "servicio_sanitario": "",
+            },
+            timeout=5,
+        )
+        print(f"[auth] Medico registrado en citas: user_id={user.id} status={resp.status_code}")
+    except Exception as e:
+        print(f"[auth] ERROR al registrar medico en citas: {e}")
 
 
 def health(request):
@@ -26,6 +54,9 @@ class RegisterView(APIView):
         refresh = RefreshToken.for_user(user)
         refresh["email"] = user.email
         refresh["tipo_usuario"] = user.tipo_usuario
+
+        _crear_medico_en_citas(user)
+
         return Response(
             {
                 "user": UsuarioSerializer(user).data,
@@ -164,8 +195,10 @@ class AdminCreateUserView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        return Response(UsuarioSerializer(user).data, status=status.HTTP_201_CREATED)
 
+        _crear_medico_en_citas(user)
+
+        return Response(UsuarioSerializer(user).data, status=status.HTTP_201_CREATED)
 
 class ProfilePhotoView(APIView):
     permission_classes = [IsAuthenticated]
