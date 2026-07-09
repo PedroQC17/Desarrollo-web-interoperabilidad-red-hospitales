@@ -5,8 +5,5 @@ server:
 services:
   auth: "http://localhost:8001"
   pacientes: "http://localhost:8002"
-  medicos: "http://localhost:8003"
-  citas: "http://localhost:8004"
+  citas: "http://localhost:8003"
   medicamentos: "http://localhost:8005"
-  facturacion: "http://localhost:8006"
-  soporte: "http://localhost:8007"

@@ -40,11 +40,8 @@ def load_config():
             "services": {
                 "auth": "http://localhost:8001",
                 "pacientes": "http://localhost:8002",
-                "medicos": "http://localhost:8003",
-                "citas": "http://localhost:8004",
+                "citas": "http://localhost:8003",
                 "medicamentos": "http://localhost:8005",
-                "facturacion": "http://localhost:8006",
-                "soporte": "http://localhost:8007",
             },
         }
 
@@ -84,16 +81,15 @@ def register_consul():
         logger.warning("No se pudo registrar en Consul: %s", e)
 
 # ── Mapeo de rutas a servicios ───────────────────────
-# Las rutas más largas deben ir primero para evitar colisiones con startswith
 ROUTE_MAP = [
     ("/api/historiales/", "pacientes"),
-    ("/api/hospitales/", "medicos"),
+    ("/api/hospitales/", "citas"),
     ("/api/medicamentos/", "medicamentos"),
-    ("/api/facturacion/", "facturacion"),
-    ("/api/mensajes/", "soporte"),
+    ("/api/facturacion/", "citas"),
+    ("/api/mensajes/", "citas"),
     ("/api/pacientes/", "pacientes"),
-    ("/api/medicos/", "medicos"),
-    ("/api/soporte/", "soporte"),
+    ("/api/medicos/", "citas"),
+    ("/api/soporte/", "citas"),
     ("/api/recetas/", "pacientes"),
     ("/api/citas/", "citas"),
     ("/api/auth/", "auth"),

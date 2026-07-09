@@ -5,8 +5,5 @@ server:
 services:
   auth: "http://auth-service:8001"
   pacientes: "http://pacientes-service:8002"
-  medicos: "http://medicos-service:8003"
-  citas: "http://citas-service:8004"
+  citas: "http://citas-service:8003"
   medicamentos: "http://medicamentos-service:8005"
-  facturacion: "http://facturacion-service:8006"
-  soporte: "http://soporte-service:8007"

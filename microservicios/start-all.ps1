@@ -7,7 +7,7 @@ $LogDir = Join-Path $Root "logs"
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Iniciando todos los microservicios" -ForegroundColor Cyan
+Write-Host "  Iniciando microservicios (3 MS + auth)" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -61,51 +61,54 @@ Start-Sleep -Seconds 2
 # ── 3. Auth Service ──────────────────────────────────
 Write-Host "[3/7] Iniciando Auth Service (puerto 8001)..." -ForegroundColor Yellow
 $AuthJob = Start-Job -ScriptBlock {
-    param($dir)
-    $log = Join-Path $dir "logs\auth-service.log"
-    Set-Location (Join-Path $dir "auth-service")
-    $env:PORT = "8001"
-    python manage.py runserver 0.0.0.0:8001 2>&1 | Out-File $log
-} -ArgumentList $Root
-Start-Sleep -Seconds 2
+    param($d, $logDir)
+    $log = Join-Path $logDir "auth.log"
+    Set-Location $d
+    python manage.py runserver 8001 *>&1 | Out-File $log
+} -ArgumentList (Join-Path $Root "auth-service"), $LogDir
 
 # ── 4. Microservicios Django ─────────────────────────
 Write-Host "[4/7] Iniciando servicios Django..." -ForegroundColor Yellow
 
-$services = @(
-    @{Name="Pacientes"; Port=8002; Dir="pacientes-service"},
-    @{Name="Medicos"; Port=8003; Dir="medicos-service"},
-    @{Name="Citas"; Port=8004; Dir="citas-service"},
-    @{Name="Medicamentos"; Port=8005; Dir="medicamentos-service"},
-    @{Name="Facturacion"; Port=8006; Dir="facturacion-service"},
-    @{Name="Soporte"; Port=8007; Dir="soporte-service"}
-)
+# Pacientes Service
+$PacientesJob = Start-Job -ScriptBlock {
+    param($d, $logDir)
+    $log = Join-Path $logDir "pacientes.log"
+    Set-Location $d
+    python manage.py runserver 8002 *>&1 | Out-File $log
+} -ArgumentList (Join-Path $Root "pacientes-service"), $LogDir
 
-$ServiceJobs = @()
-foreach ($svc in $services) {
-    Write-Host "  -> $($svc.Name) (puerto $($svc.Port))..." -ForegroundColor Gray
-    $job = Start-Job -ScriptBlock {
-        param($d, $p, $name, $logDir)
-        $log = Join-Path $logDir "$name.log"
-        Set-Location $d
-        $env:PORT = "$p"
-        python manage.py runserver 0.0.0.0:$p 2>&1 | Out-File $log
-    } -ArgumentList (Join-Path $Root $svc.Dir), $svc.Port, $svc.Name.ToLower(), $LogDir
-    $ServiceJobs += $job
-    Start-Sleep -Seconds 1
-}
+# Citas Service
+Start-Sleep -Seconds 1
+Write-Host "  Iniciando Citas Service (puerto 8003)..." -ForegroundColor Gray
+$CitasJob = Start-Job -ScriptBlock {
+    param($d, $logDir)
+    $log = Join-Path $logDir "citas.log"
+    Set-Location $d
+    python manage.py runserver 8003 *>&1 | Out-File $log
+} -ArgumentList (Join-Path $Root "citas-service"), $LogDir
+
+# Medicamentos Service
+Start-Sleep -Seconds 1
+Write-Host "  Iniciando Medicamentos Service (puerto 8005)..." -ForegroundColor Gray
+$MedicamentosJob = Start-Job -ScriptBlock {
+    param($d, $logDir)
+    $log = Join-Path $logDir "medicamentos.log"
+    Set-Location $d
+    python manage.py runserver 8005 *>&1 | Out-File $log
+} -ArgumentList (Join-Path $Root "medicamentos-service"), $LogDir
 
 # ── 5. Gateway ───────────────────────────────────────
 Write-Host "[5/7] Iniciando API Gateway (puerto 8000)..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
 $GatewayJob = Start-Job -ScriptBlock {
-    param($dir)
-    $log = Join-Path $dir "logs\gateway.log"
-    Set-Location (Join-Path $dir "infraestructura\gateway")
-    $env:PORT = "8000"
-    python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload 2>&1 | Out-File $log
-} -ArgumentList $Root
-Start-Sleep -Seconds 2
+    param($d, $logDir)
+    $log = Join-Path $logDir "gateway.log"
+    Set-Location $d
+    python -m uvicorn main:app --port 8000 --reload *>&1 | Out-File $log
+} -ArgumentList (Join-Path $Root "infraestructura\gateway"), $LogDir
+
+Start-Sleep -Seconds 3
 
 # ── 6. Frontend ──────────────────────────────────────
 Write-Host "[6/7] Iniciando Frontend (puerto 8080)..." -ForegroundColor Yellow
@@ -125,29 +128,19 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "  Todos los servicios iniciados!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Consul UI:       http://localhost:8500" -ForegroundColor Cyan
-Write-Host "  Config Server:   http://localhost:8888" -ForegroundColor Cyan
 Write-Host "  API Gateway:     http://localhost:8000" -ForegroundColor Cyan
 Write-Host "  Frontend:        http://localhost:8080" -ForegroundColor Cyan
 Write-Host "  Auth Service:    http://localhost:8001" -ForegroundColor Cyan
 Write-Host "  Pacientes:       http://localhost:8002" -ForegroundColor Cyan
-Write-Host "  Medicos:         http://localhost:8003" -ForegroundColor Cyan
-Write-Host "  Citas:           http://localhost:8004" -ForegroundColor Cyan
+Write-Host "  Citas:           http://localhost:8003" -ForegroundColor Cyan
 Write-Host "  Medicamentos:    http://localhost:8005" -ForegroundColor Cyan
-Write-Host "  Facturacion:     http://localhost:8006" -ForegroundColor Cyan
-Write-Host "  Soporte:         http://localhost:8007" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Logs en: $LogDir" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  Si en Consul no aparecen los servicios, revisa los logs:"
-Write-Host "  Get-Content $LogDir\*.log" -ForegroundColor Gray
-Write-Host ""
-Write-Host "  Para detener: Get-Job | Stop-Job" -ForegroundColor Magenta
+Write-Host "  Para detener: Stop-Job *; Remove-Job *" -ForegroundColor Magenta
 Write-Host ""
 
-# Mantener el script vivo para mantener los jobs en background
 Read-Host "Presiona Enter para detener todos los servicios"
 
-# Limpiar
 Get-Job | Stop-Job
 Get-Job | Remove-Job

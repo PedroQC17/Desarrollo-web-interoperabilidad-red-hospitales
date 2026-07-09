@@ -41,63 +41,6 @@ services:
     networks:
       - red-hospital
 
-  postgres-medicos:
-    image: postgres:15
-    container_name: red-hospital-pg-medicos
-    environment:
-      POSTGRES_DB: db_medicos
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5434:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d db_medicos"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - pg_medicos_data:/var/lib/postgresql/data
-    networks:
-      - red-hospital
-
-  mysql-citas:
-    image: mysql:8
-    container_name: red-hospital-mysql-citas
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_DATABASE: db_citas
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - mysql_citas_data:/var/lib/mysql
-    networks:
-      - red-hospital
-
-  mysql-facturacion:
-    image: mysql:8
-    container_name: red-hospital-mysql-facturacion
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MYSQL_DATABASE: db_facturacion
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3307:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - mysql_facturacion_data:/var/lib/mysql
-    networks:
-      - red-hospital
-
   postgres-medicamentos:
     image: postgres:15
     container_name: red-hospital-pg-medicamentos
@@ -114,25 +57,6 @@ services:
       retries: 5
     volumes:
       - pg_medicamentos_data:/var/lib/postgresql/data
-    networks:
-      - red-hospital
-
-  postgres-soporte:
-    image: postgres:15
-    container_name: red-hospital-pg-soporte
-    environment:
-      POSTGRES_DB: db_soporte
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    ports:
-      - "5436:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d db_soporte"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - pg_soporte_data:/var/lib/postgresql/data
     networks:
       - red-hospital
 
@@ -185,7 +109,7 @@ services:
       - red-hospital
 
   # ═══════════════════════════════════════════
-  # MICROSERVICIOS
+  # MICROSERVICIOS (3 de negocio + auth)
   # ═══════════════════════════════════════════
   auth-service:
     build: ./auth-service
@@ -233,45 +157,20 @@ services:
     networks:
       - red-hospital
 
-  medicos-service:
-    build: ./medicos-service
-    container_name: red-hospital-medicos
-    ports:
-      - "8003:8003"
-    environment:
-      USE_SQLITE: "False"
-      CONFIG_SERVER: http://config-server:8888
-      CONSUL_HOST: consul
-      CONSUL_ADDRESS: medicos-service
-      PORT: 8003
-    command: >
-      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
-    depends_on:
-      postgres-medicos:
-        condition: service_healthy
-      config-server:
-        condition: service_started
-      consul:
-        condition: service_started
-    networks:
-      - red-hospital
-
   citas-service:
     build: ./citas-service
     container_name: red-hospital-citas
     ports:
-      - "8004:8004"
+      - "8003:8003"
     environment:
-      USE_SQLITE: "False"
+      USE_SQLITE: "True"
       CONFIG_SERVER: http://config-server:8888
       CONSUL_HOST: consul
       CONSUL_ADDRESS: citas-service
-      PORT: 8004
+      PORT: 8003
     command: >
-      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8004"
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
     depends_on:
-      mysql-citas:
-        condition: service_healthy
       config-server:
         condition: service_started
       consul:
@@ -302,60 +201,11 @@ services:
     networks:
       - red-hospital
 
-  facturacion-service:
-    build: ./facturacion-service
-    container_name: red-hospital-facturacion
-    ports:
-      - "8006:8006"
-    environment:
-      USE_SQLITE: "False"
-      CONFIG_SERVER: http://config-server:8888
-      CONSUL_HOST: consul
-      CONSUL_ADDRESS: facturacion-service
-      PORT: 8006
-    command: >
-      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8006"
-    depends_on:
-      mysql-facturacion:
-        condition: service_healthy
-      config-server:
-        condition: service_started
-      consul:
-        condition: service_started
-    networks:
-      - red-hospital
-
-  soporte-service:
-    build: ./soporte-service
-    container_name: red-hospital-soporte
-    ports:
-      - "8007:8007"
-    environment:
-      USE_SQLITE: "False"
-      CONFIG_SERVER: http://config-server:8888
-      CONSUL_HOST: consul
-      CONSUL_ADDRESS: soporte-service
-      PORT: 8007
-    command: >
-      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8007"
-    depends_on:
-      postgres-soporte:
-        condition: service_healthy
-      config-server:
-        condition: service_started
-      consul:
-        condition: service_started
-    networks:
-      - red-hospital
 
 volumes:
   pg_auth_data:
   pg_pacientes_data:
-  pg_medicos_data:
   pg_medicamentos_data:
-  pg_soporte_data:
-  mysql_citas_data:
-  mysql_facturacion_data:
 
 networks:
   red-hospital:
