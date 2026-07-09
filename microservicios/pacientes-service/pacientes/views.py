@@ -32,12 +32,7 @@ def _get_paciente_from_user(request):
     try:
         return Paciente.objects.get(user_id=request.user.id)
     except Paciente.DoesNotExist:
-        email = getattr(request.user, "email", "")
-        return Paciente.objects.create(
-            user_id=request.user.id,
-            nombre=email.split("@")[0] if email else f"paciente_{request.user.id}",
-            email=email or f"paciente_{request.user.id}@placeholder.com",
-        )
+        return Paciente.objects.create(user_id=request.user.id)
 
 
 def _obtener_o_crear_historial(paciente):

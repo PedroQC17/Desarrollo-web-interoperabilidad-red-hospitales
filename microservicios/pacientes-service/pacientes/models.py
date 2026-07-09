@@ -3,11 +3,19 @@ from django.db import models
 
 class Paciente(models.Model):
     user_id = models.IntegerField(unique=True)
-    nombre = models.CharField(max_length=255)
-    email = models.EmailField()
-    telefono = models.CharField(max_length=20, blank=True)
-    direccion = models.CharField(max_length=255, blank=True)
-    fecha_nacimiento = models.DateField(null=True, blank=True)
+
+    fallecido = models.BooleanField(default=False)
+    fecha_hora_fallecido = models.DateTimeField(null=True, blank=True)
+    direccion = models.CharField(max_length=200)
+    estado_civil = models.CharField(max_length=20)
+    nac_multiple = models.IntegerField(default=1)
+    foto = models.TextField(blank=True, default="")
+
+    contacto_nombre = models.CharField(max_length=100)
+    contacto_numero = models.CharField(max_length=20)
+    contacto_dir = models.CharField(max_length=200)
+    idioma_preferido = models.CharField(max_length=30)
+
     creado_en = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -15,7 +23,7 @@ class Paciente(models.Model):
         verbose_name_plural = "Pacientes"
 
     def __str__(self):
-        return self.nombre
+        return f"Paciente #{self.user_id}"
 
 # creacion de la clase de historial
 class Historial(models.Model):

@@ -5,8 +5,9 @@ from .models import Paciente, Historial, Observacion, Examen, Receta, Diagnostic
 
 @admin.register(Paciente)
 class PacienteAdmin(admin.ModelAdmin):
-    list_display = ["nombre", "email", "fecha_nacimiento"]
-    search_fields = ["nombre", "email"]
+    list_display = ["user_id", "direccion", "estado_civil", "fallecido"]
+    list_filter = ["fallecido", "estado_civil"]
+    search_fields = ["user_id", "direccion"]
 
 @admin.register(Historial)
 class HistorialAdmin(admin.ModelAdmin):
