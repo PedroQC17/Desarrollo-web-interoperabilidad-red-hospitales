@@ -106,4 +106,4 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-PORT = config.get("server", {}).get("port", 8004)
+PORT = config.get("server", {}).get("port", 8003)
