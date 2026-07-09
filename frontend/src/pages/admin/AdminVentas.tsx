@@ -16,59 +16,33 @@ import {
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
-// ── Tipos ────────────────────────────────────────────────────────────────────
-interface VentaPorHospital {
-  "despacho__cita__medico__usuario__medico__hospital__id": number;
-  "despacho__cita__medico__usuario__medico__hospital__nombre": string;
-  total_ingresos: string;
-  total_ventas: number;
+interface VentaDia {
+  fecha: string;
+  total: string | number;
+  cantidad: number;
 }
 
-interface MasVendido {
-  medicamento__nombre: string;
-  medicamento__tipo: string;
-  total_vendido: number;
-  total_ingresos: string;
+interface ServicioEspecialidad {
+  especialidad: string;
+  total: number;
 }
 
-interface ReporteVentas {
-  por_hospital: VentaPorHospital[];
-  mas_vendidos: MasVendido[];
-}
-
-interface ServicioPorHospital {
-  "medico__hospital__id": number;
-  "medico__hospital__nombre": string;
-  total_ingresos: string;
-  total_atenciones: number;
-}
-
-interface ServicioPorTipo {
-  categoria_servicio: string;
-  total_ingresos: string;
-  total_atenciones: number;
-}
-
-interface ServicioPorMedico {
-  "medico__usuario__nombre": string;
-  "medico__especialidad": string;
-  "medico__hospital__nombre": string;
-  total_ingresos: string;
-  total_atenciones: number;
-}
-
-interface ReporteServicios {
-  por_hospital: ServicioPorHospital[];
-  por_servicio: ServicioPorTipo[];
-  por_medico: ServicioPorMedico[];
-  totales: { total_ingresos: string; total_atenciones: number };
+interface FacturaInfo {
+  id: number;
+  paciente_nombre: string;
+  monto_total: string;
+  pagada: boolean;
+  fecha_emision: string;
+  descripcion?: string;
 }
 
 const AdminVentas = () => {
-  const [reporteVentas, setReporteVentas] = useState<ReporteVentas | null>(null);
-  const [reporteServicios, setReporteServicios] = useState<ReporteServicios | null>(null);
+  const [reporteVentas, setReporteVentas] = useState<VentaDia[]>([]);
+  const [reporteServicios, setReporteServicios] = useState<ServicioEspecialidad[]>([]);
+  const [facturas, setFacturas] = useState<FacturaInfo[]>([]);
   const [loadingVentas, setLoadingVentas] = useState(false);
   const [loadingServicios, setLoadingServicios] = useState(false);
+  const [loadingFacturas, setLoadingFacturas] = useState(false);
 
   const [filtroDesde, setFiltroDesde] = useState("");
   const [filtroHasta, setFiltroHasta] = useState("");
@@ -81,7 +55,7 @@ const AdminVentas = () => {
       if (filtroHasta) params.append("hasta", filtroHasta);
       const qs = params.toString() ? `?${params.toString()}` : "";
       const data = await api(`/medicamentos/reporte-ventas/${qs}`);
-      setReporteVentas(data);
+      setReporteVentas(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Error al cargar reporte de ventas");
     } finally {
@@ -97,7 +71,7 @@ const AdminVentas = () => {
       if (filtroHasta) params.append("hasta", filtroHasta);
       const qs = params.toString() ? `?${params.toString()}` : "";
       const data = await api(`/citas/reporte-servicios/${qs}`);
-      setReporteServicios(data);
+      setReporteServicios(Array.isArray(data) ? data : []);
     } catch {
       toast.error("Error al cargar reporte de servicios");
     } finally {
@@ -105,18 +79,29 @@ const AdminVentas = () => {
     }
   };
 
-  useEffect(() => { cargarVentas(); cargarServicios(); }, []);
+  const cargarFacturas = async () => {
+    setLoadingFacturas(true);
+    try {
+      const data = await api("/facturacion/");
+      setFacturas(Array.isArray(data) ? data : []);
+    } catch {
+      // sin toast - puede no haber facturas
+    } finally {
+      setLoadingFacturas(false);
+    }
+  };
 
-  const totalVentas = reporteVentas?.por_hospital.reduce(
-    (s, h) => s + parseFloat(h.total_ingresos || "0"), 0
-  ) ?? 0;
-  const totalVendidos = reporteVentas?.por_hospital.reduce(
-    (s, h) => s + h.total_ventas, 0
-  ) ?? 0;
-  const totalServicios = reporteServicios?.totales.total_atenciones ?? 0;
-  const totalIngresosServicios = parseFloat(
-    reporteServicios?.totales.total_ingresos || "0"
-  );
+  useEffect(() => { cargarVentas(); cargarServicios(); cargarFacturas(); }, []);
+
+  const totalVentas = reporteVentas.reduce((s, h) => s + (Number(h.total) || 0), 0);
+  const totalVendidos = reporteVentas.reduce((s, h) => s + (h.cantidad || 0), 0);
+  const totalServicios = reporteServicios.reduce((s, h) => s + (h.total || 0), 0);
+  const facturasPagadas = facturas.filter((f) => f.pagada);
+  const ingresosFacturas = facturasPagadas.reduce((s, f) => s + (Number(f.monto_total) || 0), 0);
+
+  const formatFecha = (iso: string) => {
+    try { return new Date(iso).toLocaleDateString("es-PE"); } catch { return iso; }
+  };
 
   return (
     <div className="space-y-6">
@@ -125,7 +110,6 @@ const AdminVentas = () => {
         <p className="text-muted-foreground mt-1">Gestión de medicamentos vendidos y servicios prestados en la red.</p>
       </div>
 
-      {/* Filtros */}
       <Card className="border-border">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3 items-end">
@@ -144,34 +128,33 @@ const AdminVentas = () => {
         </CardContent>
       </Card>
 
-      {/* Resumen */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-border">
           <CardContent className="p-5">
             <DollarSign className="w-5 h-5 text-green-600 mb-3" />
             <p className="text-2xl font-bold text-foreground">S/ {totalVentas.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ingresos por medicamentos</p>
+            <p className="text-xs text-muted-foreground mt-1">Ingresos medicamentos</p>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="p-5">
             <Pill className="w-5 h-5 text-primary mb-3" />
             <p className="text-2xl font-bold text-foreground">{totalVendidos}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ventas de medicamentos</p>
+            <p className="text-xs text-muted-foreground mt-1">Medicamentos vendidos</p>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="p-5">
             <Stethoscope className="w-5 h-5 text-accent mb-3" />
             <p className="text-2xl font-bold text-foreground">{totalServicios}</p>
-            <p className="text-xs text-muted-foreground mt-1">Atenciones médicas</p>
+            <p className="text-xs text-muted-foreground mt-1">Atenciones por especialidad</p>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="p-5">
             <TrendingUp className="w-5 h-5 text-orange-500 mb-3" />
-            <p className="text-2xl font-bold text-foreground">S/ {totalIngresosServicios.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ingresos por servicios</p>
+            <p className="text-2xl font-bold text-foreground">S/ {ingresosFacturas.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground mt-1">Facturación total</p>
           </CardContent>
         </Card>
       </div>
@@ -186,64 +169,18 @@ const AdminVentas = () => {
             <Stethoscope className="w-4 h-4 mr-2" />
             Servicios
           </TabsTrigger>
+          <TabsTrigger value="facturacion">
+            <DollarSign className="w-4 h-4 mr-2" />
+            Facturación
+          </TabsTrigger>
         </TabsList>
 
-        {/* ── TAB MEDICAMENTOS ─────────────────────────────────────────── */}
         <TabsContent value="medicamentos" className="space-y-4">
-          {/* Ingresos por hospital */}
-          <Card className="border-border">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                Ingresos por Hospital
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {loadingVentas ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                </div>
-              ) : !reporteVentas || reporteVentas.por_hospital.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground text-sm">
-                  No hay ventas en el período seleccionado.
-                </p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Hospital</TableHead>
-                      <TableHead>Ventas</TableHead>
-                      <TableHead>Ingresos</TableHead>
-                      <TableHead className="text-right">%</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reporteVentas.por_hospital.map((h) => (
-                      <TableRow key={h["despacho__cita__medico__usuario__medico__hospital__id"]}>
-                        <TableCell className="font-medium text-sm">
-                          {h["despacho__cita__medico__usuario__medico__hospital__nombre"]}
-                        </TableCell>
-                        <TableCell className="text-sm">{h.total_ventas}</TableCell>
-                        <TableCell className="text-sm font-semibold text-primary">
-                          S/ {parseFloat(h.total_ingresos || "0").toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right text-xs text-muted-foreground">
-                          {totalVentas ? Math.round((parseFloat(h.total_ingresos || "0") / totalVentas) * 100) : 0}%
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Medicamentos más vendidos */}
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Pill className="w-5 h-5 text-primary" />
-                Medicamentos Más Vendidos
+                Ventas por Fecha
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -251,28 +188,24 @@ const AdminVentas = () => {
                 <div className="flex justify-center py-10">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
                 </div>
-              ) : !reporteVentas || reporteVentas.mas_vendidos.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground text-sm">
-                  Sin datos de ventas.
-                </p>
+              ) : reporteVentas.length === 0 ? (
+                <p className="text-center py-10 text-muted-foreground text-sm">No hay ventas en el período seleccionado.</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Medicamento</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Unidades vendidas</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Cantidad</TableHead>
                       <TableHead>Ingresos</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reporteVentas.mas_vendidos.map((m, i) => (
+                    {reporteVentas.map((v, i) => (
                       <TableRow key={i}>
-                        <TableCell className="font-medium text-sm">{m.medicamento__nombre}</TableCell>
-                        <TableCell><Badge variant="outline" className="text-xs">{m.medicamento__tipo}</Badge></TableCell>
-                        <TableCell className="text-sm font-semibold text-primary">{m.total_vendido}</TableCell>
-                        <TableCell className="text-sm">
-                          S/ {parseFloat(m.total_ingresos || "0").toLocaleString()}
+                        <TableCell className="font-medium text-sm">{formatFecha(v.fecha)}</TableCell>
+                        <TableCell className="text-sm">{v.cantidad}</TableCell>
+                        <TableCell className="text-sm font-semibold text-primary">
+                          S/ {Number(v.total || 0).toLocaleString()}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -283,62 +216,12 @@ const AdminVentas = () => {
           </Card>
         </TabsContent>
 
-        {/* ── TAB SERVICIOS ─────────────────────────────────────────────── */}
         <TabsContent value="servicios" className="space-y-4">
-          {/* Ingresos por hospital */}
-          <Card className="border-border">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                Ingresos por Hospital
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {loadingServicios ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                </div>
-              ) : !reporteServicios || reporteServicios.por_hospital.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground text-sm">
-                  No hay servicios en el período seleccionado.
-                </p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Hospital</TableHead>
-                      <TableHead>Atenciones</TableHead>
-                      <TableHead>Ingresos</TableHead>
-                      <TableHead className="text-right">%</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {reporteServicios.por_hospital.map((h) => (
-                      <TableRow key={h["medico__hospital__id"]}>
-                        <TableCell className="font-medium text-sm">{h["medico__hospital__nombre"]}</TableCell>
-                        <TableCell className="text-sm">{h.total_atenciones}</TableCell>
-                        <TableCell className="text-sm font-semibold text-accent">
-                          S/ {parseFloat(h.total_ingresos || "0").toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right text-xs text-muted-foreground">
-                          {totalIngresosServicios
-                            ? Math.round((parseFloat(h.total_ingresos || "0") / totalIngresosServicios) * 100)
-                            : 0}%
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Desglose por tipo de servicio */}
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Stethoscope className="w-5 h-5 text-primary" />
-                Ingresos por Tipo de Servicio
+                Atenciones por Especialidad
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -346,27 +229,21 @@ const AdminVentas = () => {
                 <div className="flex justify-center py-10">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
                 </div>
-              ) : !reporteServicios || reporteServicios.por_servicio.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground text-sm">
-                  Sin datos.
-                </p>
+              ) : reporteServicios.length === 0 ? (
+                <p className="text-center py-10 text-muted-foreground text-sm">No hay servicios registrados.</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tipo de Servicio</TableHead>
+                      <TableHead>Especialidad</TableHead>
                       <TableHead>Atenciones</TableHead>
-                      <TableHead>Ingresos</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reporteServicios.por_servicio.map((s, i) => (
+                    {reporteServicios.map((s, i) => (
                       <TableRow key={i}>
-                        <TableCell className="font-medium text-sm">{s.categoria_servicio}</TableCell>
-                        <TableCell className="text-sm">{s.total_atenciones}</TableCell>
-                        <TableCell className="text-sm font-semibold text-accent">
-                          S/ {parseFloat(s.total_ingresos || "0").toLocaleString()}
-                        </TableCell>
+                        <TableCell className="font-medium text-sm">{s.especialidad}</TableCell>
+                        <TableCell className="text-sm font-semibold text-accent">{s.total}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -374,45 +251,46 @@ const AdminVentas = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Desglose por médico */}
+        <TabsContent value="facturacion" className="space-y-4">
           <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" />
-                Ingresos por Médico
+                <Building2 className="w-5 h-5 text-primary" />
+                Facturas Emitidas
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              {loadingServicios ? (
+              {loadingFacturas ? (
                 <div className="flex justify-center py-10">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
                 </div>
-              ) : !reporteServicios || reporteServicios.por_medico.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground text-sm">
-                  Sin datos.
-                </p>
+              ) : facturas.length === 0 ? (
+                <p className="text-center py-10 text-muted-foreground text-sm">No hay facturas registradas.</p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Médico</TableHead>
-                      <TableHead>Especialidad</TableHead>
-                      <TableHead>Hospital</TableHead>
-                      <TableHead>Atenciones</TableHead>
-                      <TableHead>Ingresos</TableHead>
+                      <TableHead>Paciente</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Fecha</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reporteServicios.por_medico.map((m, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium text-sm">{m["medico__usuario__nombre"]}</TableCell>
-                        <TableCell><Badge variant="outline" className="text-xs">{m["medico__especialidad"]}</Badge></TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{m["medico__hospital__nombre"]}</TableCell>
-                        <TableCell className="text-sm">{m.total_atenciones}</TableCell>
-                        <TableCell className="text-sm font-semibold text-accent">
-                          S/ {parseFloat(m.total_ingresos || "0").toLocaleString()}
+                    {facturas.map((f) => (
+                      <TableRow key={f.id}>
+                        <TableCell className="font-medium text-sm">{f.paciente_nombre || `#${f.id}`}</TableCell>
+                        <TableCell className="text-sm font-semibold text-primary">
+                          S/ {Number(f.monto_total).toLocaleString()}
                         </TableCell>
+                        <TableCell>
+                          <Badge className={f.pagada ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
+                            {f.pagada ? "Pagada" : "Pendiente"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{formatFecha(f.fecha_emision)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

@@ -204,7 +204,7 @@ const PatientCitas = () => {
       return;
     }
     const inicio = new Date(`${form.fecha}T${form.hora}`);
-    if (Number.isNaN(inicio.getTime())) { setFormError("La fecha o la hora no son válidas."); return; }
+    if (Number.isNaN(inicio.getTime())) { setFormError("La fecha o la hora no son validas."); return; }
 
     const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
     if (inicio < hoy) {
@@ -225,20 +225,22 @@ const PatientCitas = () => {
 
     const medicoObj = doctors.find((d) => String(d.id) === form.medico);
     const fin = new Date(inicio.getTime() + 30 * 60 * 1000);
+    const tipoValido = form.tipo === "emergencia" ? "presencial" : form.tipo;
 
     setFormLoading(true);
     try {
       const response = await api("/citas/", {
         method: "POST",
         body: JSON.stringify({
-          medico_id:     Number(form.medico),
+          medico:        Number(form.medico),
           medico_nombre: medicoObj?.nombre || "",
           especialidad:  medicoObj?.especialidad ?? form.especialidad,
-          tipo:          form.tipo,
+          tipo:          tipoValido,
           prioridad:     "media",
           inicio:        inicio.toISOString(),
           fin:           fin.toISOString(),
-          motivo:        form.motivo + (form.nota ? `\n\n${form.nota}` : ""),
+          categoria_servicio: form.motivo,
+          nota:          form.nota || "",
         }),
       });
       setAppointments((current) => [formatAppointment(response), ...current]);

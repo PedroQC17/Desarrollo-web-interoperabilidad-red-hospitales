@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Search, MapPin, Phone, Edit, Clock, Stethoscope, LogOut } from "lucide-react";
+import { Building2, Plus, Search, MapPin, Phone, Edit, Clock, Stethoscope, LogOut, UserPlus, Users, X } from "lucide-react";
 
 import {
   Dialog, DialogContent, DialogDescription,
@@ -13,6 +13,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+
+type Medico = {
+  id: number;
+  user_id: number;
+  nombre: string;
+  especialidad: string;
+  hospital: number | null;
+  disponibilidad: boolean;
+};
 
 type Hospital = {
   id: number;
@@ -55,6 +64,7 @@ const tipoLabel: Record<string, string> = {
 
 const AdminHospitales = () => {
   const [hospitales, setHospitales]         = useState<Hospital[]>([]);
+  const [medicos, setMedicos]               = useState<Medico[]>([]);
   const [search, setSearch]                 = useState("");
   const [openCrear, setOpenCrear]           = useState(false);
   const [openEditar, setOpenEditar]         = useState(false);
@@ -69,6 +79,11 @@ const AdminHospitales = () => {
   const [motivoDesafiliar, setMotivoDesafiliar]     = useState("");
   const [desafiliando, setDesafiliando]             = useState(false);
 
+  // Diálogo de asignar médicos
+  const [hospitalAsignar, setHospitalAsignar] = useState<Hospital | null>(null);
+  const [medicosFiltrados, setMedicosFiltrados] = useState<Medico[]>([]);
+  const [asignandoIds, setAsignandoIds] = useState<number[]>([]);
+
   // ── Cargar ────────────────────────────────────────────────────────────────
   const cargarHospitales = async () => {
     try {
@@ -79,7 +94,16 @@ const AdminHospitales = () => {
     }
   };
 
-  useEffect(() => { cargarHospitales(); }, []);
+  const cargarMedicos = async () => {
+    try {
+      const data = await api("/medicos/");
+      setMedicos(Array.isArray(data) ? data : []);
+    } catch {
+      // silencioso
+    }
+  };
+
+  useEffect(() => { cargarHospitales(); cargarMedicos(); }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -194,7 +218,68 @@ const AdminHospitales = () => {
     }
   };
 
-  // ── Desafiliar (desactivación suave) ──────────────────────────────────────
+  // ── Asignar médico a hospital ──────────────────────────────────────────────
+  const abrirAsignarMedicos = (h: Hospital) => {
+    setHospitalAsignar(h);
+    setAsignandoIds([]);
+    const asignados = medicos.filter((m) => m.hospital === h.id);
+    const noAsignados = medicos.filter((m) => m.hospital !== h.id);
+    setMedicosFiltrados([...asignados, ...noAsignados]);
+  };
+
+  const getMedicosHospital = (hospitalId: number) => {
+    return medicos.filter((m) => m.hospital === hospitalId);
+  };
+
+  const toggleAsignacion = async (medicoId: number) => {
+    if (!hospitalAsignar) return;
+    const medico = medicos.find((m) => m.id === medicoId);
+    if (!medico || medico.hospital === hospitalAsignar.id) return;
+
+    setAsignandoIds((prev) => [...prev, medicoId]);
+    try {
+      await api(`/medicos/${medicoId}/`, {
+        method: "PATCH",
+        body: JSON.stringify({ hospital: hospitalAsignar.id }),
+      });
+      setMedicos((prev) =>
+        prev.map((m) => (m.id === medicoId ? { ...m, hospital: hospitalAsignar.id } : m))
+      );
+      setMedicosFiltrados((prev) =>
+        prev.map((m) => (m.id === medicoId ? { ...m, hospital: hospitalAsignar.id } : m))
+      );
+      toast.success(`${medico.nombre} asignado a ${hospitalAsignar.nombre}`);
+    } catch {
+      toast.error("Error al asignar médico");
+    } finally {
+      setAsignandoIds((prev) => prev.filter((id) => id !== medicoId));
+    }
+  };
+
+  const desasignarMedico = async (medicoId: number) => {
+    if (!hospitalAsignar) return;
+    const medico = medicos.find((m) => m.id === medicoId);
+    if (!medico) return;
+
+    setAsignandoIds((prev) => [...prev, medicoId]);
+    try {
+      await api(`/medicos/${medicoId}/`, {
+        method: "PATCH",
+        body: JSON.stringify({ hospital: null }),
+      });
+      setMedicos((prev) =>
+        prev.map((m) => (m.id === medicoId ? { ...m, hospital: null } : m))
+      );
+      setMedicosFiltrados((prev) =>
+        prev.map((m) => (m.id === medicoId ? { ...m, hospital: null } : m))
+      );
+      toast.success(`${medico.nombre} removido de ${hospitalAsignar.nombre}`);
+    } catch {
+      toast.error("Error al remover médico");
+    } finally {
+      setAsignandoIds((prev) => prev.filter((id) => id !== medicoId));
+    }
+  };
   const abrirDesafiliar = (h: Hospital) => {
     setHospitalDesafiliar(h);
     setMotivoDesafiliar("");
@@ -383,6 +468,57 @@ const AdminHospitales = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog Asignar Médicos */}
+      <Dialog open={!!hospitalAsignar} onOpenChange={(v) => { if (!v) setHospitalAsignar(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Asignar Médicos - {hospitalAsignar?.nombre}</DialogTitle>
+            <DialogDescription>
+              Selecciona los médicos que atenderán en este hospital.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 max-h-[50vh] overflow-y-auto">
+            {medicosFiltrados.length === 0 ? (
+              <p className="text-center text-muted-foreground py-6 text-sm">No hay médicos registrados.</p>
+            ) : (
+              medicosFiltrados.map((m) => {
+                const estaAsignado = m.hospital === hospitalAsignar?.id;
+                const cargando = asignandoIds.includes(m.id);
+                return (
+                  <div key={m.id} className={`flex items-center justify-between p-3 rounded-lg border ${estaAsignado ? "border-green-300 bg-green-50" : "border-border"}`}>
+                    <div>
+                      <p className="font-medium text-sm">{m.nombre}</p>
+                      <p className="text-xs text-muted-foreground">{m.especialidad}</p>
+                    </div>
+                    {estaAsignado ? (
+                      <Button
+                        variant="ghost" size="sm"
+                        className="text-destructive hover:text-destructive"
+                        disabled={cargando}
+                        onClick={() => desasignarMedico(m.id)}
+                      >
+                        {cargando ? "..." : <X className="w-4 h-4" />}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline" size="sm"
+                        disabled={cargando}
+                        onClick={() => toggleAsignacion(m.id)}
+                      >
+                        {cargando ? "..." : <><UserPlus className="w-3.5 h-3.5 mr-1" />Asignar</>}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHospitalAsignar(null)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Buscador */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -452,10 +588,21 @@ const AdminHospitales = () => {
                   </p>
                 )}
 
+                {getMedicosHospital(h.id).length > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>{getMedicosHospital(h.id).length} médico(s) asignado(s)</span>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1" onClick={() => abrirEditar(h)}>
                     <Edit className="w-3.5 h-3.5 mr-1.5" />
                     Editar
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => abrirAsignarMedicos(h)}>
+                    <Users className="w-3.5 h-3.5 mr-1" />
+                    Médicos
                   </Button>
                   <Button
                     variant="outline" size="sm"
