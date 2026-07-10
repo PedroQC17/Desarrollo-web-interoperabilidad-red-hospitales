@@ -3,8 +3,12 @@ server:
   name: citas-service
 
 database:
-  engine: django.db.backends.sqlite3
-  name: db.sqlite3
+  engine: mssql
+  name: db_citas
+  user: sa
+  password: YourPassword123!
+  host: mssql-citas
+  port: 1433
 
 services:
   auth: "http://auth-service:8001"

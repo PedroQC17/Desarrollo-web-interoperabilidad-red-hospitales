@@ -1,6 +1,7 @@
 django==5.1
 djangorestframework==3.15
-mysqlclient==2.2
+mssql-django
+pyodbc
 django-cors-headers==4.4
 httpx==0.27.0
 python-consul==1.1

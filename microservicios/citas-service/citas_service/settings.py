@@ -72,12 +72,16 @@ else:
     db = config.get("database", {})
     DATABASES = {
         "default": {
-            "ENGINE": db.get("engine", "django.db.backends.mysql"),
+            "ENGINE": db.get("engine", "mssql"),
             "NAME": db.get("name", "db_citas"),
-            "USER": db.get("user", "root"),
-            "PASSWORD": db.get("password", "root"),
+            "USER": db.get("user", "sa"),
+            "PASSWORD": db.get("password", "YourPassword123!"),
             "HOST": db.get("host", "localhost"),
-            "PORT": db.get("port", 3306),
+            "PORT": db.get("port", 1433),
+            "OPTIONS": {
+                "driver": "ODBC Driver 18 for SQL Server",
+                "extra_params": "TrustServerCertificate=yes;Encrypt=no",
+            },
         }
     }
 
