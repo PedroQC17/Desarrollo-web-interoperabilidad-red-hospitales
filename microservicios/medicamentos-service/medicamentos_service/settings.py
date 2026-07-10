@@ -72,7 +72,7 @@ else:
     db = config.get("database", {})
     DATABASES = {
         "default": {
-            "ENGINE": db.get("engine", "django.db.backends.postgresql"),
+            "ENGINE": db.get("engine", "django.db.backends.mysql"),
             "NAME": db.get("name", "db_medicamentos"),
             "USER": db.get("user", "postgres"),
             "PASSWORD": db.get("password", "postgres"),

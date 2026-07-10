@@ -3,16 +3,15 @@ server:
   name: medicamentos-service
 
 database:
-  engine: django.db.backends.postgresql
+  engine: django.db.backends.mysql
   name: db_medicamentos
-  user: postgres
-  password: postgres
-  host: postgres-medicamentos
-  port: 5432
+  user: root
+  password: root
+  host: mysql-medicamentos
+  port: 3306
 
 services:
   auth: "http://auth-service:8001"
-  medicos: "http://medicos-service:8003"
 
 consul:
   host: consul
