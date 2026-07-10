@@ -14,7 +14,9 @@ import config from "@/config/env";
 
 interface Receta {
   id: number;
-  medicamento: { nombre: string; costo: number };
+  medicamento_id: number;
+  medicamento_nombre: string;
+  medicamento_costo?: number;
   intencion: string;
   categoria: string;
   prioridad: string;
@@ -27,7 +29,7 @@ interface Receta {
 interface Cita {
   id: number;
 
-  paciente: number;
+  paciente_id: number;
   paciente_nombre: string;
 
   especialidad: string;
@@ -432,7 +434,7 @@ const DoctorRecetas = () => {
                       <div key={receta.id} className="p-3 border rounded-lg">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-semibold text-sm">{receta.medicamento.nombre}</h4>
+                            <h4 className="font-semibold text-sm">{receta.medicamento_nombre}</h4>
                             <p className="text-xs text-muted-foreground mt-1">{receta.intencion}</p>
                             <p className="text-xs text-foreground/70 mt-2">
                               <strong>Dosis:</strong> {receta.instruccion_dosis}

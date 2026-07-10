@@ -74,7 +74,7 @@ const DoctorDashboard = () => {
     {
       label: "Pacientes Atendidos",
       // paciente_nombre existe en el serializer de lectura
-      value: String(new Set(citas.map((c: any) => c.paciente)).size),
+      value: String(new Set(citas.map((c: any) => c.paciente_id)).size),
       icon: Users,
       color: "text-primary",
     },

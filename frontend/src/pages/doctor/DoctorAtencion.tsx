@@ -22,7 +22,7 @@ import config from "@/config/env";
 
 interface Cita {
   id: number;
-  paciente: number;
+  paciente_id: number;
   paciente_nombre: string;
   especialidad: string;
   categoria_servicio: string;
@@ -264,7 +264,7 @@ export default function DoctorAtencion() {
       await api("/historiales/subir/", {
         method: "POST",
         body: JSON.stringify({
-          paciente: cita?.paciente,
+          paciente: cita?.paciente_id,
           observaciones: [{ motivo_consulta: motivoConsulta, antecedentes_patologicos: antecedentesPatologicos }],
         }),
       });

@@ -189,7 +189,10 @@ def subir_historial(request):
 
     recetas_data = request.data.get('recetas', [])
     for rec in recetas_data:
-        Receta.objects.create(historial=historial, **rec)
+        rec_copy = dict(rec)
+        if 'medicamento' in rec_copy and 'medicamento_id' not in rec_copy:
+            rec_copy['medicamento_id'] = rec_copy.pop('medicamento')
+        Receta.objects.create(historial=historial, **rec_copy)
 
     return Response({
         "mensaje": "Historial actualizado correctamente.",

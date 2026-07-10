@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/authContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,13 +41,14 @@ interface Despacho {
 interface Cita {
   id: number;
 
-  paciente: number;
+  paciente_id: number;
   paciente_nombre: string;
 
   inicio: string;
 }
 
 const DoctorMedicamentos = () => {
+  const { user } = useAuth();
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>([]);
   const [citas, setCitas] = useState<Cita[]>([]);
   const [despachos, setDespachos] = useState<Despacho[]>([]);
@@ -57,6 +59,8 @@ const DoctorMedicamentos = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const citasPacientes = citas.filter((c) => c.paciente_id !== user?.id);
 
   const fetchMedicamentos = async () => {
     setLoading(true);
@@ -189,7 +193,7 @@ const DoctorMedicamentos = () => {
                     <SelectValue placeholder="Seleccionar cita del paciente" />
                   </SelectTrigger>
                   <SelectContent>
-                    {citas.map((cita) => (
+                    {citasPacientes.map((cita) => (
                       <SelectItem key={cita.id} value={cita.id.toString()}>
                         {cita.paciente_nombre} - {new Date(cita.inicio).toLocaleDateString()}
                       </SelectItem>

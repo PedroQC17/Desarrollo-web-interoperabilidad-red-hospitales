@@ -14,8 +14,9 @@ interface Factura {
   fecha_emitida: string;
   descripcion: string;
   monto_total: string | number;
-  estado_pago: string;
-  cita_id?: number;
+  pagada: boolean;
+  metodo_pago: string;
+  cita_reportada?: number;
   medicamentos?: string;
   hospital?: string;
 }
@@ -33,48 +34,23 @@ const PatientFacturacion = () => {
     setLoading(true);
     setError(null);
     try {
-      // Obtener facturas de consultas médicas
       const consultasData = await api("/facturacion/");
-      const consultas = Array.isArray(consultasData)
-        ? consultasData.map((f: any) => ({
-            ...f,
-            tipo: "consulta",
-          }))
-        : Array.isArray(consultasData?.results)
-        ? consultasData.results.map((f: any) => ({
-            ...f,
-            tipo: "consulta",
-          }))
-        : [];
+      const consultas = (Array.isArray(consultasData) ? consultasData : Array.isArray(consultasData?.results) ? consultasData.results : [])
+        .map((f: any) => ({ ...f, tipo: "consulta" as const, fecha_emitida: f.fecha_emision || f.fecha_emitida }));
 
-      // Obtener facturas de medicamentos (despachos)
       const medicamentosData = await api("/medicamentos/mis-facturas-medicamentos/");
-      const rawMedicamentos = Array.isArray(medicamentosData)
-        ? medicamentosData
-        : Array.isArray(medicamentosData?.results)
-        ? medicamentosData.results
-        : [];
+      const rawMedicamentos = Array.isArray(medicamentosData) ? medicamentosData
+        : Array.isArray(medicamentosData?.results) ? medicamentosData.results : [];
       const medicamentos = rawMedicamentos.map((d: any) => ({
-          id: d.id,
-          tipo: "medicamento",
-          fecha_emitida: d.fecha_despacho,
-          hospital: `Despacho de Medicamentos`,
-          descripcion: `${d.items?.length || 0} medicamento(s) despachado(s)`,
-          medicamentos: d.items
-            ?.map((item: any) => `${item.medicamento_nombre} x${item.cantidad}`)
-            .join(", "),
-          monto_total: d.total,
-          estado_pago: "pagado",
-          cita_id: d.cita,
-        }));
+        id: d.id, tipo: "medicamento" as const, fecha_emitida: d.fecha_despacho,
+        descripcion: `${d.items?.length || 0} medicamento(s)`,
+        medicamentos: d.items?.map((item: any) => `${item.medicamento_nombre || 'Med'} x${item.cantidad}`).join(", "),
+        monto_total: d.total, pagada: true, metodo_pago: "", cita_reportada: d.cita_id,
+      }));
 
-      // Combinar y ordenar por fecha descendente
       const todasLasFacturas = [...consultas, ...medicamentos].sort(
-        (a, b) =>
-          new Date(b.fecha_emitida).getTime() -
-          new Date(a.fecha_emitida).getTime()
+        (a, b) => new Date(b.fecha_emitida || '').getTime() - new Date(a.fecha_emitida || '').getTime()
       );
-
       setFacturas(todasLasFacturas);
     } catch (err: any) {
       console.error("Error cargando facturas:", err);
@@ -128,7 +104,7 @@ const PatientFacturacion = () => {
   });
 
   const totalPagado = filtered
-    .filter((f) => f.estado_pago === "pagado")
+    .filter((f) => f.pagada)
     .reduce((sum, f) => sum + Number(f.monto_total), 0);
 
   return (
@@ -214,21 +190,19 @@ const PatientFacturacion = () => {
                         </h3>
                         <Badge
                           className={
-                            factura.estado_pago === "pagado"
+                            factura.pagada
                               ? "bg-green-100 text-green-700 border-green-200"
                               : "bg-yellow-100 text-yellow-700 border-yellow-200"
                           }
                         >
-                          {factura.estado_pago === "pagado"
-                            ? "Pagada"
-                            : factura.estado_pago}
+                          {factura.pagada ? "Pagada" : "Pendiente"}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
                           {factura.tipo === "consulta" ? "Consulta" : "Medicamento"}
                         </Badge>
-                        {factura.cita_id && (
+                        {factura.cita_reportada && (
                           <Badge variant="outline" className="text-xs">
-                            Cita #{factura.cita_id}
+                            Cita #{factura.cita_reportada}
                           </Badge>
                         )}
                       </div>

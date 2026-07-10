@@ -91,9 +91,18 @@ def medicamento_detail(request, pk):
 @permission_classes([IsAuthenticated])
 def despachar(request, cita_pk=None):
     if _get_tipo(request) != "medico":
-        return Response({"error": "Solo médicos pueden despachar"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "Solo medicos pueden despachar"}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = DespachoInputSerializer(data=request.data)
+    data = request.data.copy()
+    if cita_pk:
+        data["cita_id"] = cita_pk
+    if not data.get("paciente_id"):
+        paciente_name = request.headers.get("X-Paciente-Id", "") or request.headers.get("X-User-Id", "")
+        data["paciente_id"] = int(paciente_name) if paciente_name else 0
+    if not data.get("paciente_nombre"):
+        data["paciente_nombre"] = request.headers.get("X-Paciente-Nombre", "") or request.headers.get("X-User-Email", "")
+
+    serializer = DespachoInputSerializer(data=data)
     serializer.is_valid(raise_exception=True)
 
     cita_id = cita_pk if cita_pk else serializer.validated_data["cita_id"]

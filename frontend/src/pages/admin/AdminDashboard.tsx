@@ -74,16 +74,18 @@ const AdminDashboard = () => {
           api("/citas/reporte-servicios/"),
         ]);
 
-        const hospitalCount = Array.isArray(hospitals) ? hospitals.length : 0;
+        const hospitalCount = Array.isArray(hospitals) ? hospitals.filter((h: any) => h.activo).length : 0;
         const activeUsers = Array.isArray(usuarios) ? usuarios.filter((u: any) => u.is_active).length : 0;
-        const salesTotal = ventas?.por_hospital?.reduce((s: number, h: any) => s + parseFloat(h.total_ingresos || 0), 0) || 0;
-        const citasAtendidas = servicios?.totales?.total_atenciones || 0;
+        const ventasArr = Array.isArray(ventas) ? ventas : [];
+        const salesTotal = ventasArr.reduce((s: number, v: any) => s + (Number(v.total) || 0), 0);
+        const serviciosArr = Array.isArray(servicios) ? servicios : [];
+        const citasAtendidas = serviciosArr.reduce((s: number, sv: any) => s + (sv.total || 0), 0);
 
         setStats([
           { label: "Hospitales en Red", value: String(hospitalCount), icon: Building2, color: "text-primary", trend: "Registrados en el sistema" },
           { label: "Usuarios Activos", value: activeUsers.toLocaleString(), icon: Users, color: "text-accent", trend: "Cuentas habilitadas" },
-          { label: "Ventas del Mes", value: `S/ ${salesTotal.toFixed(2)}`, icon: Pill, color: "text-green-600", trend: "Ingresos por medicamentos" },
-          { label: "Citas Atendidas", value: citasAtendidas.toLocaleString(), icon: Activity, color: "text-orange-500", trend: "Atenciones completadas" },
+          { label: "Ventas del Mes", value: `S/ ${salesTotal.toLocaleString()}`, icon: Pill, color: "text-green-600", trend: "Ingresos por medicamentos" },
+          { label: "Citas Atendidas", value: citasAtendidas.toLocaleString(), icon: Activity, color: "text-orange-500", trend: "Total de atenciones" },
         ]);
       } catch {
         setError("Error al cargar estadísticas");

@@ -43,7 +43,7 @@ interface Receta {
 interface Cita {
   id: number;
 
-  paciente: number;
+  paciente_id: number;
   paciente_nombre: string;
 
   especialidad: string;
@@ -112,7 +112,7 @@ const DoctorHistoriales = () => {
 
       // Si la cita de la lista no es activa (pendiente, confirmada o en curso), buscamos una activa
       if (!["pendiente", "confirmada", "en_curso"].includes(cita.estado)) {
-        const activeCitas = await api(`/citas/medico/activas/?paciente_id=${cita.paciente}`);
+        const activeCitas = await api(`/citas/medico/activas/?paciente_id=${cita.paciente_id}`);
         const activeCita = Array.isArray(activeCitas) ? activeCitas[0] : null;
         if (!activeCita) {
           alert("El paciente no tiene una cita activa (pendiente, confirmada o en curso) asignada a usted.");
@@ -154,7 +154,7 @@ const DoctorHistoriales = () => {
   const pacientesPor = new Map<string, Cita>();
 
   filteredCitas.forEach((cita) => {
-    const key = String(cita.paciente);
+    const key = String(cita.paciente_id);
 
     if (!pacientesPor.has(key)) {
       pacientesPor.set(key, cita);
@@ -223,7 +223,7 @@ const DoctorHistoriales = () => {
                         </h3>
 
                         <p className="text-xs text-muted-foreground">
-                          ID Paciente: {cita.paciente}
+                          ID Paciente: {cita.paciente_id}
                         </p>
 
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">

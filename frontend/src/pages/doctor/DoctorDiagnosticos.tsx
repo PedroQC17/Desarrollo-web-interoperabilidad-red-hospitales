@@ -36,7 +36,9 @@ interface Diagnostico {
 
 interface Receta {
   id: number;
-  medicamento: { nombre: string; costo: number };
+  medicamento_id: number;
+  medicamento_nombre: string;
+  medicamento_costo?: number;
   intencion: string;
   categoria: string;
   instruccion_dosis: string;
@@ -474,7 +476,7 @@ const DoctorDiagnosticos = () => {
                           <div key={r.id} className="p-3 border rounded-lg">
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className="font-semibold text-sm">{r.medicamento.nombre}</p>
+                                <p className="font-semibold text-sm">{r.medicamento_nombre}</p>
                                 <p className="text-xs text-foreground/70 mt-1">Dosis: {r.instruccion_dosis}</p>
                                 <p className="text-xs text-foreground/70">Cantidad: {r.cantidad_suministrada}</p>
                               </div>

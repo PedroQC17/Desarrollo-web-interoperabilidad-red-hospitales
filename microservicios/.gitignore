@@ -6,3 +6,5 @@ __pycache__/
 db.sqlite3
 *.sqlite3
 logs/
+
+testsprite_tests\tmp\config.json
