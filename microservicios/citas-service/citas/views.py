@@ -608,6 +608,19 @@ def mis_facturas(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+def factura_pdf(request, pk):
+    try:
+        factura = Factura.objects.get(pk=pk)
+    except Factura.DoesNotExist:
+        return Response({"error": "Factura no encontrada"}, status=status.HTTP_404_NOT_FOUND)
+    if not _is_admin(request) and factura.paciente_id != request.user.id:
+        return Response({"error": "No tienes permiso"}, status=status.HTTP_403_FORBIDDEN)
+    serializer = FacturaSerializer(factura)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def reporte_ingresos(request):
     if not _is_admin(request):
         return Response({"error": "Solo administradores"}, status=status.HTTP_403_FORBIDDEN)

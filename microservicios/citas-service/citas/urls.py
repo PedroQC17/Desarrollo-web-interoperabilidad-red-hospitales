@@ -58,4 +58,5 @@ urls_facturacion = [
     path("reporte-ingresos/", views.reporte_ingresos, name="reporte-ingresos"),
     path("<int:pk>/", views.factura_detail, name="factura-detail"),
     path("<int:pk>/pagar/", views.registrar_pago, name="registrar-pago"),
+    path("<int:pk>/pdf/", views.factura_pdf, name="factura-pdf"),
 ]
