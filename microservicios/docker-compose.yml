@@ -22,41 +22,58 @@ services:
     networks:
       - red-hospital
 
-  postgres-pacientes:
-    image: postgres:15
-    container_name: red-hospital-pg-pacientes
+  mysql-pacientes:
+    image: mysql:8
+    container_name: red-hospital-mysql-pacientes
     environment:
-      POSTGRES_DB: db_pacientes
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_DATABASE: db_pacientes
+      MYSQL_ROOT_PASSWORD: root
     ports:
-      - "5433:5432"
+      - "3307:3306"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d db_pacientes"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
-      - pg_pacientes_data:/var/lib/postgresql/data
+      - mysql_pacientes_data:/var/lib/mysql
     networks:
       - red-hospital
 
-  postgres-medicamentos:
-    image: postgres:15
-    container_name: red-hospital-pg-medicamentos
+  mssql-citas:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: red-hospital-mssql-citas
     environment:
-      POSTGRES_DB: db_medicamentos
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourPassword123!"
+      MSSQL_PID: Developer
     ports:
-      - "5435:5432"
+      - "14333:1433"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d db_medicamentos"]
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourPassword123!" -C -Q "SELECT 1" || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mssql_citas_data:/var/opt/mssql
+    networks:
+      - red-hospital
+
+  mysql-medicamentos:
+    image: mysql:8
+    container_name: red-hospital-mysql-medicamentos
+    environment:
+      MYSQL_DATABASE: db_medicamentos
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 5s
       retries: 5
     volumes:
-      - pg_medicamentos_data:/var/lib/postgresql/data
+      - mysql_medicamentos_data:/var/lib/mysql
     networks:
       - red-hospital
 
@@ -148,7 +165,7 @@ services:
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8002"
     depends_on:
-      postgres-pacientes:
+      mysql-pacientes:
         condition: service_healthy
       config-server:
         condition: service_started
@@ -163,7 +180,7 @@ services:
     ports:
       - "8003:8003"
     environment:
-      USE_SQLITE: "True"
+      USE_SQLITE: "False"
       CONFIG_SERVER: http://config-server:8888
       CONSUL_HOST: consul
       CONSUL_ADDRESS: citas-service
@@ -171,6 +188,8 @@ services:
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
     depends_on:
+      mssql-citas:
+        condition: service_healthy
       config-server:
         condition: service_started
       consul:
@@ -192,7 +211,7 @@ services:
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8005"
     depends_on:
-      postgres-medicamentos:
+      mysql-medicamentos:
         condition: service_healthy
       config-server:
         condition: service_started
@@ -204,8 +223,9 @@ services:
 
 volumes:
   pg_auth_data:
-  pg_pacientes_data:
-  pg_medicamentos_data:
+  mysql_pacientes_data:
+  mssql_citas_data:
+  mysql_medicamentos_data:
 
 networks:
   red-hospital:
