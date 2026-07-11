@@ -20,7 +20,7 @@ spec:
       containers:
       - name: medicamentos
         image: medicamentos-service:latest
-        imagePullPolicy: Never
+
         ports:
         - containerPort: 8005
         env:

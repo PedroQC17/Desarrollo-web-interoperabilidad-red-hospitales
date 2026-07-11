@@ -20,7 +20,7 @@ spec:
       containers:
       - name: pacientes
         image: pacientes-service:latest
-        imagePullPolicy: Never
+
         ports:
         - containerPort: 8002
         env:

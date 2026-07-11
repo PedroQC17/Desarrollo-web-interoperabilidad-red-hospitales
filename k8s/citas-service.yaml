@@ -20,7 +20,7 @@ spec:
       containers:
       - name: citas
         image: citas-service:latest
-        imagePullPolicy: IfNotPresent
+
         ports:
         - containerPort: 8003
         env:
