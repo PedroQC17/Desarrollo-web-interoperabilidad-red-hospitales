@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: medicamentos-service
+  namespace: red-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: medicamentos-service
+  template:
+    metadata:
+      labels:
+        app: medicamentos-service
+    spec:
+      initContainers:
+      - name: wait-mysql
+        image: busybox:1.36
+        command: ["sh", "-c", "until nc -z mysql-medicamentos 3306; do sleep 2; done"]
+      containers:
+      - name: medicamentos
+        image: medicamentos-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8005
+        env:
+        - name: USE_SQLITE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: USE_SQLITE
+        - name: CONFIG_SERVER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CONFIG_SERVER
+        - name: CONSUL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CONSUL_HOST
+        - name: PORT
+          value: "8005"
+        command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8005"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: medicamentos-service
+  namespace: red-hospital
+spec:
+  selector:
+    app: medicamentos-service
+  ports:
+  - port: 8005
+    targetPort: 8005

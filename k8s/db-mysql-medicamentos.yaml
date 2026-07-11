@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-medicamentos
+  namespace: red-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-medicamentos
+  template:
+    metadata:
+      labels:
+        app: mysql-medicamentos
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_DATABASE
+          value: db_medicamentos
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mysql-medicamentos-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-medicamentos
+  namespace: red-hospital
+spec:
+  selector:
+    app: mysql-medicamentos
+  ports:
+  - port: 3306
+    targetPort: 3306

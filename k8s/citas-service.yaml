@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: citas-service
+  namespace: red-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: citas-service
+  template:
+    metadata:
+      labels:
+        app: citas-service
+    spec:
+      initContainers:
+      - name: wait-mssql
+        image: busybox:1.36
+        command: ["sh", "-c", "until nc -z mssql-citas 1433; do sleep 2; done"]
+      containers:
+      - name: citas
+        image: citas-service:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8003
+        env:
+        - name: USE_SQLITE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: USE_SQLITE
+        - name: CONFIG_SERVER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CONFIG_SERVER
+        - name: CONSUL_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: CONSUL_HOST
+        - name: PORT
+          value: "8003"
+        - name: SERVICE_PACIENTES
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SERVICE_PACIENTES
+        - name: SERVICE_MEDICAMENTOS
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: SERVICE_MEDICAMENTOS
+        command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8003"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: citas-service
+  namespace: red-hospital
+spec:
+  selector:
+    app: citas-service
+  ports:
+  - port: 8003
+    targetPort: 8003

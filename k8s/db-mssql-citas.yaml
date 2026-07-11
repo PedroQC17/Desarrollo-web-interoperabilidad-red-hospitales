@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mssql-citas
+  namespace: red-hospital
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql-citas
+  template:
+    metadata:
+      labels:
+        app: mssql-citas
+    spec:
+      containers:
+      - name: mssql
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        ports:
+        - containerPort: 1433
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: MSSQL_SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: MSSQL_SA_PASSWORD
+        - name: MSSQL_PID
+          value: Developer
+        volumeMounts:
+        - name: data
+          mountPath: /var/opt/mssql
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mssql-citas-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql-citas
+  namespace: red-hospital
+spec:
+  selector:
+    app: mssql-citas
+  ports:
+  - port: 1433
+    targetPort: 1433

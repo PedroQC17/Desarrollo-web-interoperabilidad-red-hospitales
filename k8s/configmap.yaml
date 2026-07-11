@@ -1,0 +1,112 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-server-files
+  namespace: red-hospital
+data:
+  auth.yml: |
+    server:
+      port: 8001
+      name: auth-service
+
+    database:
+      engine: django.db.backends.postgresql
+      name: db_auth
+      user: postgres
+      password: postgres
+      host: postgres-auth
+      port: 5432
+
+    jwt:
+      secret: clave-super-segura-cambiar-en-produccion
+      algorithm: HS256
+      expiration_minutes: 60
+
+    consul:
+      host: consul
+      port: 8500
+  pacientes.yml: |
+    server:
+      port: 8002
+      name: pacientes-service
+
+    database:
+      engine: django.db.backends.mysql
+      name: db_pacientes
+      user: root
+      password: root
+      host: mysql-pacientes
+      port: 3306
+
+    services:
+      auth: "http://auth-service:8001"
+
+    consul:
+      host: consul
+      port: 8500
+  citas.yml: |
+    server:
+      port: 8003
+      name: citas-service
+
+    database:
+      engine: mssql
+      name: db_citas
+      user: sa
+      password: YourPassword123!
+      host: mssql-citas
+      port: 1433
+
+    services:
+      auth: "http://auth-service:8001"
+      pacientes: "http://pacientes-service:8002"
+      medicamentos: "http://medicamentos-service:8005"
+
+    consul:
+      host: consul
+      port: 8500
+  medicamentos.yml: |
+    server:
+      port: 8005
+      name: medicamentos-service
+
+    database:
+      engine: django.db.backends.mysql
+      name: db_medicamentos
+      user: root
+      password: root
+      host: mysql-medicamentos
+      port: 3306
+
+    services:
+      auth: "http://auth-service:8001"
+
+    consul:
+      host: consul
+      port: 8500
+  gateway.yml: |
+    server:
+      port: 8000
+      name: api-gateway
+
+    services:
+      auth: "http://auth-service:8001"
+      pacientes: "http://pacientes-service:8002"
+      citas: "http://citas-service:8003"
+      medicamentos: "http://medicamentos-service:8005"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: red-hospital
+data:
+  USE_SQLITE: "False"
+  DEBUG: "True"
+  CONSUL_HOST: consul
+  CONSUL_PORT: "8500"
+  CONFIG_SERVER: http://config-server:8888
+  CITAS_SERVICE_URL: http://citas-service:8003
+  SERVICE_PACIENTES: http://pacientes-service:8002
+  SERVICE_MEDICAMENTOS: http://medicamentos-service:8005
+  CONFIG_SERVER_URL: http://config-server:8888
