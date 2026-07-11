@@ -186,6 +186,8 @@ services:
       CONSUL_HOST: consul
       CONSUL_ADDRESS: citas-service
       PORT: 8003
+      SERVICE_PACIENTES: http://pacientes-service:8002
+      SERVICE_MEDICAMENTOS: http://medicamentos-service:8005
     command: >
       sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
     depends_on:
