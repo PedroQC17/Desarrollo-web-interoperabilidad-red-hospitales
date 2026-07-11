@@ -329,6 +329,7 @@ def cita_paciente(request, pk):
         url = f"{_get_service_url('pacientes')}/api/historiales/mi-historial/"
         headers = _proxy_headers(request)
         headers["X-User-Id"] = str(cita.paciente_id)
+        headers["X-User-Tipo"] = "paciente"
         resp = httpx.get(url, headers=headers, timeout=10)
         if resp.status_code == 200:
             data = resp.json()
