@@ -167,9 +167,9 @@ def subir_historial(request):
             return Response({"error": "El campo 'paciente' o 'paciente_id' es obligatorio para médicos."},
                             status=status.HTTP_400_BAD_REQUEST)
         try:
-            paciente = Paciente.objects.get(pk=paciente_id)
+            paciente = Paciente.objects.get(user_id=paciente_id)
         except Paciente.DoesNotExist:
-            return Response({"error": "Paciente no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            paciente = Paciente.objects.create(user_id=paciente_id)
     else:
         paciente = _get_paciente_from_user(request)
 
