@@ -14,7 +14,10 @@ logger = logging.getLogger("gateway")
 
 CONFIG_SERVER_URL = os.getenv("CONFIG_SERVER_URL", "http://localhost:8888")
 CONSUL_HOST = os.getenv("CONSUL_HOST", "localhost")
-CONSUL_PORT = int(os.getenv("CONSUL_PORT", "8500"))
+_consul_port_raw = os.getenv("CONSUL_PORT", "8500")
+if "://" in _consul_port_raw:
+    _consul_port_raw = _consul_port_raw.split(":")[-1]
+CONSUL_PORT = int(_consul_port_raw)
 GATEWAY_PORT = int(os.getenv("PORT", "8000"))
 
 app = FastAPI(title="API Gateway")
