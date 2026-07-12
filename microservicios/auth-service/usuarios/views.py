@@ -207,10 +207,12 @@ class ProfilePhotoView(APIView):
         foto_file = request.FILES.get("foto")
         if not foto_file:
             return Response({"error": "No se envió ninguna imagen"}, status=status.HTTP_400_BAD_REQUEST)
+        content_type = foto_file.content_type or "image/jpeg"
         foto_base64 = base64.b64encode(foto_file.read()).decode("utf-8")
-        request.user.foto = foto_base64
+        foto_data_uri = f"data:{content_type};base64,{foto_base64}"
+        request.user.foto = foto_data_uri
         request.user.save(update_fields=["foto"])
-        return Response({"foto": foto_base64})
+        return Response({"foto": foto_data_uri})
 
     def delete(self, request):
         request.user.foto = ""
