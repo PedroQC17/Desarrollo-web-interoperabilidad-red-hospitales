@@ -15,16 +15,16 @@ echo [2/7] Iniciando Config Server...
 start "Config-Server" cmd /c "cd /d %~dp0infraestructura\config-server && python -m uvicorn main:app --host 0.0.0.0 --port 8888 --reload"
 timeout /t 2 /nobreak >nul
 
-echo [3/7] Iniciando Auth Service (puerto 8001)...
-start "Auth" cmd /c "cd /d %~dp0auth-service && python manage.py runserver 8001"
+echo [3/7] Ejecutando migraciones e iniciando Auth Service (puerto 8001)...
+start "Auth" cmd /c "cd /d %~dp0auth-service && python manage.py migrate && python manage.py runserver 8001"
 timeout /t 2 /nobreak >nul
 
 echo [4/7] Iniciando servicios Django...
-start "Pacientes" cmd /c "cd /d %~dp0pacientes-service && python manage.py runserver 8002"
+start "Pacientes" cmd /c "cd /d %~dp0pacientes-service && python manage.py migrate && python manage.py runserver 8002"
 timeout /t 1 /nobreak >nul
-start "Citas" cmd /c "cd /d %~dp0citas-service && python manage.py runserver 8003"
+start "Citas" cmd /c "cd /d %~dp0citas-service && python manage.py migrate && python manage.py runserver 8003"
 timeout /t 1 /nobreak >nul
-start "Medicamentos" cmd /c "cd /d %~dp0medicamentos-service && python manage.py runserver 8005"
+start "Medicamentos" cmd /c "cd /d %~dp0medicamentos-service && python manage.py migrate && python manage.py runserver 8005"
 timeout /t 3 /nobreak >nul
 
 echo [5/7] Iniciando API Gateway...
