@@ -3,6 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { register, getProfile } from "@/lib/auth";
 import { useAuth } from "@/lib/authContext";
 import { useNavigate } from "react-router-dom";
+import { parseError } from "@/lib/error";
 import "./Auth.css";
 import logo from "../../assets/logo-siehc.png";
 import { showGlobalLoader } from "@/lib/loader";
@@ -181,8 +182,7 @@ function Register() {
 
     } catch (err: any) {
       console.error(err);
-      const msg = err?.confirmar || err?.email || err?.password || err?.detail || "Error en el registro. Verifica los datos.";
-      setServerError(typeof msg === "string" ? msg : JSON.stringify(msg));
+      setServerError(parseError(err));
     } finally {
       setLoading(false);
     }

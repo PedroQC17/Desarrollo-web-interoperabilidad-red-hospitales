@@ -72,7 +72,14 @@ export const api = async (
   // ──────────────────────────────────────────────────────────────────────
 
   if (!res.ok) {
-    const error = await res.json();
+    const contentType = res.headers.get("content-type") || "";
+    let error: any;
+    if (contentType.includes("application/json")) {
+      error = await res.json();
+    } else {
+      const text = await res.text();
+      error = { detail: `Error del servidor (${res.status})`, raw: text.slice(0, 200) };
+    }
     throw error;
   }
 
@@ -100,6 +107,9 @@ export const downloadBlob = async (endpoint: string): Promise<Blob> => {
     return retry.blob();
   }
 
-  if (!res.ok) throw new Error("Error al descargar");
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Error al descargar (${res.status}): ${text.slice(0, 100)}`);
+  }
   return res.blob();
 };
