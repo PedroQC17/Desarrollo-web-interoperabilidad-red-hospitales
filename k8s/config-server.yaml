@@ -16,7 +16,7 @@ spec:
       containers:
       - name: config-server
         image: config-server:latest
-
+        imagePullPolicy: Always
         ports:
         - containerPort: 8888
         volumeMounts:
