@@ -411,7 +411,7 @@ export default function DoctorAtencion() {
           <CardContent className="p-6 text-left space-y-3 text-sm">
             {[
               ["Cita ID", cita?.id],
-              ["Paciente", cita?.paciente_nombre],
+              ["Paciente", cita?.paciente_nombre || `#${cita?.paciente_id}`],
               ["Especialidad", cita?.especialidad],
             ].map(([label, value]) => (
               <div key={String(label)} className="flex justify-between border-b border-border/60 pb-2">
@@ -446,7 +446,7 @@ export default function DoctorAtencion() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Módulo de Atención Médica</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Paciente: <span className="font-semibold text-foreground">{cita?.paciente_nombre}</span> • Cita #{cita?.id}
+              Paciente: <span className="font-semibold text-foreground">{cita?.paciente_nombre || `Paciente #${cita?.paciente_id}`}</span> • Cita #{cita?.id}
             </p>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-2">
               <span className="flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5" />{cita ? new Date(cita.inicio).toLocaleDateString() : ""}</span>

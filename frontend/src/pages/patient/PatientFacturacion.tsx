@@ -106,6 +106,11 @@ const PatientFacturacion = () => {
   const totalPagado = filtered
     .filter((f) => f.pagada)
     .reduce((sum, f) => sum + Number(f.monto_total), 0);
+  const totalPendiente = filtered
+    .filter((f) => !f.pagada)
+    .reduce((sum, f) => sum + Number(f.monto_total), 0);
+  const totalFacturado = filtered
+    .reduce((sum, f) => sum + Number(f.monto_total), 0);
 
   return (
     <div className="space-y-8">
@@ -140,13 +145,29 @@ const PatientFacturacion = () => {
       </div>
 
       {/* Resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-border">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="border-border bg-emerald-50/30">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-foreground">
+            <p className="text-2xl font-bold text-emerald-600">
               S/ {totalPagado.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Total Pagado</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-amber-50/30">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-amber-600">
+              S/ {totalPendiente.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Pendiente de Pago</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-foreground">
+              S/ {totalFacturado.toFixed(2)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Total Facturado</p>
           </CardContent>
         </Card>
         <Card className="border-border">

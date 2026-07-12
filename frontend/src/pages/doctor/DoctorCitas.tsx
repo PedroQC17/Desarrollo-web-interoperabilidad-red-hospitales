@@ -231,7 +231,7 @@ const DoctorCitas = ({ onAtender }: DoctorCitasProps) => {
                     </div>
                     <div className="space-y-1">
                       <h3 className="font-semibold text-foreground leading-tight">
-                        {cita.paciente_nombre}
+                        {cita.paciente_nombre || `Paciente #${cita.id}`}
                       </h3>
                       <p className="text-sm text-muted-foreground flex items-center gap-1">
                         <Stethoscope className="w-3.5 h-3.5" />
