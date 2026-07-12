@@ -63,7 +63,14 @@ export const api = async (
     });
 
     if (!retry.ok) {
-      const error = await retry.json();
+      const contentType = retry.headers.get("content-type") || "";
+      let error: any;
+      if (contentType.includes("application/json")) {
+        error = await retry.json();
+      } else {
+        const text = await retry.text();
+        error = { detail: `Error del servidor (${retry.status})`, raw: text.slice(0, 200) };
+      }
       throw error;
     }
 
@@ -103,7 +110,10 @@ export const downloadBlob = async (endpoint: string): Promise<Blob> => {
     const retry = await fetch(`${API_URL}${endpoint}`, {
       headers: { Authorization: `Bearer ${newToken}` },
     });
-    if (!retry.ok) throw new Error("Error al descargar");
+    if (!retry.ok) {
+      const text = await retry.text();
+      throw new Error(`Error al descargar tras renovar sesión (${retry.status}): ${text.slice(0, 100)}`);
+    }
     return retry.blob();
   }
 
