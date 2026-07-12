@@ -189,7 +189,7 @@ services:
       SERVICE_PACIENTES: http://pacientes-service:8002
       SERVICE_MEDICAMENTOS: http://medicamentos-service:8005
     command: >
-      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
+      sh -c "python -c 'import pyodbc; conn = pyodbc.connect(\"DRIVER={ODBC Driver 18 for SQL Server};SERVER=mssql-citas;PORT=1433;UID=sa;PWD=YourPassword123!;TrustServerCertificate=yes;Encrypt=no;DATABASE=master\"); conn.execute(\"IF NOT EXISTS (SELECT name FROM sys.databases WHERE name='\\''db_citas'\\'') CREATE DATABASE db_citas\"); conn.close()' 2>/dev/null; python manage.py migrate && python manage.py runserver 0.0.0.0:8003"
     depends_on:
       mssql-citas:
         condition: service_healthy
