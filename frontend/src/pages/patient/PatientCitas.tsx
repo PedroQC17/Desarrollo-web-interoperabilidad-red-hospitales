@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarDays, Plus, Clock, MapPin, X, Loader2, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/authContext";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -98,6 +99,7 @@ const maxFecha = maxDate.toISOString().split("T")[0];
 // ── Componente principal ────────────────────────────────────────────────────
 
 const PatientCitas = () => {
+  const { user } = useAuth();
   const [appointments,   setAppointments]   = useState<Appointment[]>([]);
   const [filter,         setFilter]         = useState("todas");
   const [hospitals,      setHospitals]      = useState<Hospital[]>([]);
@@ -232,15 +234,16 @@ const PatientCitas = () => {
       const response = await api("/citas/", {
         method: "POST",
         body: JSON.stringify({
-          medico:        Number(form.medico),
-          medico_nombre: medicoObj?.nombre || "",
-          especialidad:  medicoObj?.especialidad ?? form.especialidad,
-          tipo:          tipoValido,
-          prioridad:     "media",
-          inicio:        inicio.toISOString(),
-          fin:           fin.toISOString(),
+          medico:          Number(form.medico),
+          medico_nombre:   medicoObj?.nombre || "",
+          paciente_nombre: user?.nombre || "",
+          especialidad:    medicoObj?.especialidad ?? form.especialidad,
+          tipo:            tipoValido,
+          prioridad:       "media",
+          inicio:          inicio.toISOString(),
+          fin:             fin.toISOString(),
           categoria_servicio: form.motivo,
-          nota:          form.nota || "",
+          nota:            form.nota || "",
         }),
       });
       setAppointments((current) => [formatAppointment(response), ...current]);
