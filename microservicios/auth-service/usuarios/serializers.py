@@ -4,10 +4,11 @@ from .models import Usuario
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
+    fec_nac = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = Usuario
-        fields = ["email", "nombre", "tipo_usuario", "password"]
+        fields = ["email", "nombre", "tipo_usuario", "password", "telecom", "genero", "fec_nac"]
 
     def create(self, validated_data):
         return Usuario.objects.create_user(**validated_data)

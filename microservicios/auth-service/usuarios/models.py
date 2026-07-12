@@ -3,13 +3,14 @@ from django.db import models
 
 
 class UsuarioManager(BaseUserManager):
-    def create_user(self, email, nombre, tipo_usuario, password=None):
+    def create_user(self, email, nombre, tipo_usuario, password=None, **extra_fields):
         if not email:
             raise ValueError("El email es obligatorio")
         user = self.model(
             email=self.normalize_email(email),
             nombre=nombre,
             tipo_usuario=tipo_usuario,
+            **extra_fields,
         )
         user.set_password(password)
         user.save(using=self._db)
