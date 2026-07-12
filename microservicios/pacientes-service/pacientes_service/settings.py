@@ -95,6 +95,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "EXCEPTION_HANDLER": "pacientes.exceptions.custom_exception_handler",
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
