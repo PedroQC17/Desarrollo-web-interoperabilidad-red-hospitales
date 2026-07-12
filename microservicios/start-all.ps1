@@ -59,11 +59,12 @@ $ConfigJob = Start-Job -ScriptBlock {
 Start-Sleep -Seconds 2
 
 # ── 3. Auth Service ──────────────────────────────────
-Write-Host "[3/7] Iniciando Auth Service (puerto 8001)..." -ForegroundColor Yellow
+Write-Host "[3/7] Ejecutando migraciones y iniciando Auth Service (puerto 8001)..." -ForegroundColor Yellow
 $AuthJob = Start-Job -ScriptBlock {
     param($d, $logDir)
     $log = Join-Path $logDir "auth.log"
     Set-Location $d
+    python manage.py migrate 2>&1 | Out-File "$log.migrate"
     python manage.py runserver 8001 *>&1 | Out-File $log
 } -ArgumentList (Join-Path $Root "auth-service"), $LogDir
 
@@ -75,6 +76,7 @@ $PacientesJob = Start-Job -ScriptBlock {
     param($d, $logDir)
     $log = Join-Path $logDir "pacientes.log"
     Set-Location $d
+    python manage.py migrate 2>&1 | Out-File "$log.migrate"
     python manage.py runserver 8002 *>&1 | Out-File $log
 } -ArgumentList (Join-Path $Root "pacientes-service"), $LogDir
 
@@ -85,6 +87,7 @@ $CitasJob = Start-Job -ScriptBlock {
     param($d, $logDir)
     $log = Join-Path $logDir "citas.log"
     Set-Location $d
+    python manage.py migrate 2>&1 | Out-File "$log.migrate"
     python manage.py runserver 8003 *>&1 | Out-File $log
 } -ArgumentList (Join-Path $Root "citas-service"), $LogDir
 
@@ -95,6 +98,7 @@ $MedicamentosJob = Start-Job -ScriptBlock {
     param($d, $logDir)
     $log = Join-Path $logDir "medicamentos.log"
     Set-Location $d
+    python manage.py migrate 2>&1 | Out-File "$log.migrate"
     python manage.py runserver 8005 *>&1 | Out-File $log
 } -ArgumentList (Join-Path $Root "medicamentos-service"), $LogDir
 
